@@ -107,6 +107,7 @@ func (f *Field) dataForRender(appendData ...map[string]interface{}) map[string]i
 		"value":        f.value,
 		"helptext":     f.helptext,
 		"errors":       f.errors,
+		"container":    "form",
 	}
 	for k, v := range f.additionalData {
 		data[k] = v

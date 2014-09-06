@@ -84,7 +84,11 @@ func NewFormFromModel(m interface{}, style string, args ...string) *Form {
 	for _, v := range flist {
 		form.Elements(v.(FormElement))
 	}
-	form.Elements(fields.SubmitButton("submit", "Submit"))
+	form.Elements(FieldSet(
+		"_button_group",
+		fields.SubmitButton("submit", "Submit"),
+		fields.ResetButton("reset", "Reset"),
+	).SetTmpl("fieldset_buttons"))
 	if fsort != "" {
 		form.Sort(fsort)
 	}
@@ -189,22 +193,22 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 					}
 					if _, ok := fieldSetList[fieldset]; !ok {
 						fieldSetList[fieldset] = FieldSet(fieldset, f)
-					}else{
+					} else {
 						fieldSetList[fieldset].Elements(f)
 					}
 					if fieldsort != "" {
 						if _, ok := fieldSetSort[fieldset]; !ok {
 							fieldSetSort[fieldset] = fName + ":" + fieldsort
-						}else{
+						} else {
 							fieldSetSort[fieldset] += "," + fName + ":" + fieldsort
 						}
 					}
-				}else{
+				} else {
 					fieldList = append(fieldList, f)
 					if fieldsort != "" {
 						if fieldSort == "" {
 							fieldSort = fName + ":" + fieldsort
-						}else{
+						} else {
 							fieldSort += "," + fName + ":" + fieldsort
 						}
 					}
@@ -212,7 +216,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 			}
 		}
 	}
-	for _,v := range fieldSetList {
+	for _, v := range fieldSetList {
 		if s, ok := fieldSetSort[v.Name()]; ok {
 			v.Sort(s)
 		}

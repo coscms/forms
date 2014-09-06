@@ -1,10 +1,10 @@
 package forms
 
 import (
-	"strings"
-	"strconv"
 	"bytes"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/fields"
@@ -26,13 +26,18 @@ func (f *FieldSetType) Render(appendData ...map[string]interface{}) template.HTM
 	var s string
 	buf := bytes.NewBufferString(s)
 	data := map[string]interface{}{
-		"type":    f.tmpl,
-		"name":    f.name,
-		"fields":  f.fields,
-		"classes": f.class,
-		"tags":    f.tags,
+		"container": "fieldset",
+		"name":      f.name,
+		"fields":    f.fields,
+		"classes":   f.class,
+		"tags":      f.tags,
 	}
-	data["append"] = map[string]interface{}{"type":f.tmpl}
+	for _, val := range appendData {
+		for k, v := range val {
+			data[k] = v
+		}
+	}
+	data["append"] = map[string]interface{}{"container": "fieldset"}
 	err := template.Must(template.ParseFiles(formcommon.CreateUrl(formcommon.TmplDir+"/"+f.tmpl+".html"))).Execute(buf, data)
 	if err != nil {
 		panic(err)
@@ -66,15 +71,15 @@ func FieldSet(name string, elems ...fields.FieldInterface) *FieldSetType {
 func (f *FieldSetType) SortAll(sortList ...string) *FieldSetType {
 	elem := f.fields
 	size := len(elem)
-	f.fields = make([]fields.FieldInterface,size)
+	f.fields = make([]fields.FieldInterface, size)
 	var sortSlice []string
-	if len(sortList)==1 {
+	if len(sortList) == 1 {
 		sortSlice = strings.Split(sortList[0], ",")
-	}else{
+	} else {
 		sortSlice = sortList
 	}
 	for k, fieldName := range sortSlice {
-		if oldIndex,ok := f.fieldMap[fieldName]; ok {
+		if oldIndex, ok := f.fieldMap[fieldName]; ok {
 			f.fields[k] = elem[oldIndex]
 			f.fieldMap[fieldName] = k
 		}
@@ -104,24 +109,24 @@ func (f *FieldSetType) addField(field fields.FieldInterface) *FieldSetType {
 func (f *FieldSetType) Sort(sortList ...string) *FieldSetType {
 	size := len(f.fields)
 	var sortSlice []string
-	if len(sortList)==1 {
+	if len(sortList) == 1 {
 		sortSlice = strings.Split(sortList[0], ",")
-	}else{
+	} else {
 		sortSlice = sortList
 	}
 	var index int
 	for _, nameIndex := range sortSlice {
-		ni := strings.Split(nameIndex,":")
+		ni := strings.Split(nameIndex, ":")
 		fieldName := ni[0]
-		if len(ni)>1 {
-			if idx,err := strconv.Atoi(ni[1]); err != nil {
+		if len(ni) > 1 {
+			if idx, err := strconv.Atoi(ni[1]); err != nil {
 				continue
-			}else{
+			} else {
 				index = idx
 			}
 		}
-		if oldIndex,ok := f.fieldMap[fieldName]; ok {
-			if oldIndex!=index && size > index {
+		if oldIndex, ok := f.fieldMap[fieldName]; ok {
+			if oldIndex != index && size > index {
 				f.fields[oldIndex], f.fields[index] = f.fields[index], f.fields[oldIndex]
 				f.fieldMap[f.fields[index].Name()] = index
 				f.fieldMap[f.fields[oldIndex].Name()] = oldIndex

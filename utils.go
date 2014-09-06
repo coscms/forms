@@ -22,14 +22,19 @@ func (f *Form) Render(appendData ...map[string]interface{}) template.HTML {
 	var s string
 	buf := bytes.NewBufferString(s)
 	data := map[string]interface{}{
-		"type":    "element",
-		"fields":  f.fields,
-		"classes": f.class,
-		"id":      f.id,
-		"params":  f.params,
-		"css":     f.css,
-		"method":  f.method,
-		"action":  f.action,
+		"container": "",
+		"fields":    f.fields,
+		"classes":   f.class,
+		"id":        f.id,
+		"params":    f.params,
+		"css":       f.css,
+		"method":    f.method,
+		"action":    f.action,
+	}
+	for _, val := range appendData {
+		for k, v := range val {
+			data[k] = v
+		}
 	}
 	err := f.template.Execute(buf, data)
 	if err != nil {
