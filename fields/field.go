@@ -13,6 +13,7 @@ type Field struct {
 	fieldType      string
 	Widget         widgets.WidgetInterface // Public Widget field for widget customization
 	name           string
+	placeholder    string
 	class          []string
 	id             string
 	params         map[string]string
@@ -64,6 +65,7 @@ func FieldWithType(name, t string) *Field {
 		fieldType:      t,
 		Widget:         nil,
 		name:           name,
+		placeholder:    "",
 		class:          []string{},
 		id:             "",
 		params:         map[string]string{},

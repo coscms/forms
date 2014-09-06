@@ -5,8 +5,9 @@
 package forms
 
 import (
-	//"fmt"
+	"fmt"
 	"html/template"
+	"net/url"
 	"reflect"
 	"strings"
 
@@ -183,6 +184,20 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				}
 				label = formcommon.LabelFn(label)
 				f.SetLabel(label)
+
+				params := formcommon.Tag(t, i, "form_params")
+				if params != "" {
+					if paramsMap, err := url.ParseQuery(params); err == nil {
+						for k, v := range paramsMap {
+							if k == "placeholder" || k == "title" {
+								v[0] = formcommon.LabelFn(v[0])
+							}
+							f.SetParam(k, v[0])
+						}
+					} else {
+						fmt.Println(err)
+					}
+				}
 				fieldset := formcommon.Tag(t, i, "form_fieldset")
 				fieldsort := formcommon.Tag(t, i, "form_sort")
 				if fieldset != "" {

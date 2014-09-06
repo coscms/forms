@@ -76,7 +76,7 @@ func PasswordFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 // It also uses i object's [fieldNo]-th field content to set the field content.
 func TextAreaFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	t := reflect.TypeOf(i)
-	var rows, cols int = 30, 50
+	var rows, cols int = 20, 50
 	var err error
 	if v := formcommon.Tag(t, fieldNo, "form_rows"); v != "" {
 		rows, err = strconv.Atoi(v)
