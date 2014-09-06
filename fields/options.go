@@ -48,7 +48,7 @@ func RadioFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	chArr := make([]InputChoice, 0)
 	chMap := make(map[string]string)
 	for i := 0; i < len(choices)-1; i += 2 {
-		chArr = append(chArr, InputChoice{choices[i], choices[i+1]})
+		chArr = append(chArr, InputChoice{choices[i], formcommon.LabelFn(choices[i+1])})
 		chMap[choices[i]] = choices[i+1]
 	}
 	ret := RadioField(name, chArr)
@@ -86,10 +86,11 @@ func SelectFieldFromInstance(i interface{}, fieldNo int, name string, options ma
 	chArr := make(map[string][]InputChoice)
 	chMap := make(map[string]string)
 	for i := 0; i < len(choices)-2; i += 3 {
-		if _, ok := chArr[choices[i]]; !ok {
-			chArr[choices[i]] = make([]InputChoice, 0)
+		optgroupLabel := formcommon.LabelFn(choices[i])
+		if _, ok := chArr[optgroupLabel]; !ok {
+			chArr[optgroupLabel] = make([]InputChoice, 0)
 		}
-		chArr[choices[i]] = append(chArr[choices[i]], InputChoice{choices[i+1], choices[i+2]})
+		chArr[optgroupLabel] = append(chArr[optgroupLabel], InputChoice{choices[i+1], formcommon.LabelFn(choices[i+2])})
 		chMap[choices[i+1]] = choices[i+2]
 	}
 	ret := SelectField(name, chArr)
