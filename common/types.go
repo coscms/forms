@@ -9,7 +9,10 @@ import (
 	"github.com/coscms/tagfast"
 )
 
-var TmplDir string = "templates"
+var (
+	TmplDir string = "templates"
+	LabelFn func(string) string
+)
 
 const (
 	PACKAGE_NAME = "github.com/coscms/forms"

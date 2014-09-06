@@ -174,14 +174,19 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 			}
 			if f != nil {
 				label := formcommon.Tag(t, i, "form_label")
-				if label != "" {
-					f.SetLabel(label)
-				} else {
-					f.SetLabel(strings.Title(t.Field(i).Name))
+				if label == "" {
+					label = strings.Title(t.Field(i).Name)
 				}
+				if formcommon.LabelFn != nil {
+					label = formcommon.LabelFn(label)
+				}
+				f.SetLabel(label)
 				fieldset := formcommon.Tag(t, i, "form_fieldset")
 				fieldsort := formcommon.Tag(t, i, "form_sort")
 				if fieldset != "" {
+					if formcommon.LabelFn != nil {
+						fieldset = formcommon.LabelFn(fieldset)
+					}
 					if _, ok := fieldSetList[fieldset]; !ok {
 						fieldSetList[fieldset] = FieldSet(fieldset, f)
 					}else{
