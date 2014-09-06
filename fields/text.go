@@ -99,6 +99,6 @@ func TextAreaFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 // It uses i object's [fieldNo]-th field content to set the field content.
 func HiddenFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	ret := HiddenField(name)
-	ret.SetValue(fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String()))
+	ret.SetValue(fmt.Sprintf("%v", reflect.ValueOf(i).Field(fieldNo).Interface()))
 	return ret
 }
