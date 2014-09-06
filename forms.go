@@ -86,8 +86,8 @@ func NewFormFromModel(m interface{}, style string, args ...string) *Form {
 	}
 	form.Elements(FieldSet(
 		"_button_group",
-		fields.SubmitButton("submit", "Submit"),
-		fields.ResetButton("reset", "Reset"),
+		fields.SubmitButton("submit", formcommon.LabelFn("Submit")),
+		fields.ResetButton("reset", formcommon.LabelFn("Reset")),
 	).SetTmpl("fieldset_buttons"))
 	if fsort != "" {
 		form.Sort(fsort)
@@ -181,16 +181,12 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				if label == "" {
 					label = strings.Title(t.Field(i).Name)
 				}
-				if formcommon.LabelFn != nil {
-					label = formcommon.LabelFn(label)
-				}
+				label = formcommon.LabelFn(label)
 				f.SetLabel(label)
 				fieldset := formcommon.Tag(t, i, "form_fieldset")
 				fieldsort := formcommon.Tag(t, i, "form_sort")
 				if fieldset != "" {
-					if formcommon.LabelFn != nil {
-						fieldset = formcommon.LabelFn(fieldset)
-					}
+					fieldset = formcommon.LabelFn(fieldset)
 					if _, ok := fieldSetList[fieldset]; !ok {
 						fieldSetList[fieldset] = FieldSet(fieldset, f)
 					} else {

@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	TmplDir string = "templates"
-	LabelFn func(string) string
+	TmplDir string              = "templates"
+	LabelFn func(string) string = func(s string) string {
+		return s
+	}
 )
 
 const (
