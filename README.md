@@ -159,7 +159,7 @@ Struct tags can be used to slightly modify automatic form creation. In particula
 	- radio
 	- static (simple text)
 * form_fieldset: define fieldset name
-* form_sort: sort number (asc)
+* form_sort: sort number (asc, 0 ~ total-1)
 * form_choices: defines options for select and radio input fields
 * form_max: max value (number, range, datetime, date and time fields)
 * form_min: min value (number, range, datetime, date and time fields)

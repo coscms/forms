@@ -163,13 +163,27 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				case "float", "float64":
 					f = fields.NumberFieldFromInstance(m, i, fName)
 				case "struct":
-					fl, _ := unWindStructure(v.Field(i).Interface(), fName)
+					fl, fs := unWindStructure(v.Field(i).Interface(), fName)
+					if fs != "" {
+						if fieldSort == "" {
+							fieldSort = fs
+						} else {
+							fieldSort += "," + fs
+						}
+					}
 					fieldList = append(fieldList, fl...)
 					f = nil
 				default:
 					if t.Field(i).Type.Kind() == reflect.Struct ||
 						(t.Field(i).Type.Kind() == reflect.Ptr && t.Field(i).Type.Elem().Kind() == reflect.Struct) {
-						fl, _ := unWindStructure(v.Field(i).Interface(), fName)
+						fl, fs := unWindStructure(v.Field(i).Interface(), fName)
+						if fs != "" {
+							if fieldSort == "" {
+								fieldSort = fs
+							} else {
+								fieldSort += "," + fs
+							}
+						}
 						fieldList = append(fieldList, fl...)
 						f = nil
 					} else {
