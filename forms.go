@@ -148,6 +148,8 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				f = fields.RangeFieldFromInstance(m, i, fName)
 			case "radio":
 				f = fields.RadioFieldFromInstance(m, i, fName)
+			case "checkbox":
+				f = fields.CheckboxFieldFromInstance(m, i, fName)
 			case "static":
 				f = fields.StaticFieldFromInstance(m, i, fName)
 			default:

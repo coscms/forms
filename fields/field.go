@@ -24,6 +24,8 @@ type Field struct {
 	helptext       string
 	errors         []string
 	additionalData map[string]interface{}
+	choices        interface{}
+	choiceKeys     map[string]ChoiceIndex
 }
 
 // FieldInterface defines the interface an object must implement to be used in a form. Every method returns a FieldInterface object
@@ -53,8 +55,7 @@ type FieldInterface interface {
 	SingleChoice() FieldInterface
 	AddSelected(opt ...string) FieldInterface
 	RemoveSelected(opt string) FieldInterface
-	SetSelectChoices(choices map[string][]InputChoice) FieldInterface
-	SetRadioChoices(choices []InputChoice) FieldInterface
+	SetChoices(choices interface{}) FieldInterface
 	SetText(text string) FieldInterface
 }
 
@@ -75,6 +76,8 @@ func FieldWithType(name, t string) *Field {
 		helptext:       "",
 		errors:         []string{},
 		additionalData: map[string]interface{}{},
+		choices:        nil,
+		choiceKeys:     map[string]ChoiceIndex{},
 	}
 }
 
@@ -108,6 +111,7 @@ func (f *Field) dataForRender(appendData ...map[string]interface{}) map[string]i
 		"helptext":     f.helptext,
 		"errors":       f.errors,
 		"container":    "form",
+		"choices":      f.choices,
 	}
 	for k, v := range f.additionalData {
 		data[k] = v
@@ -254,8 +258,11 @@ func (f *Field) AddError(err string) FieldInterface {
 // MultipleChoice configures the SelectField to accept and display multiple choices.
 // It has no effect if type is not SELECT.
 func (f *Field) MultipleChoice() FieldInterface {
-	if f.fieldType == formcommon.SELECT {
+	switch f.fieldType {
+	case formcommon.SELECT:
 		f.AddTag("multiple")
+		fallthrough
+	case formcommon.CHECKBOX:
 		// fix name if necessary
 		if !strings.HasSuffix(f.name, "[]") {
 			f.name = f.name + "[]"
@@ -267,8 +274,11 @@ func (f *Field) MultipleChoice() FieldInterface {
 // SingleChoice configures the Field to accept and display only one choice (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) SingleChoice() FieldInterface {
-	if f.fieldType == formcommon.SELECT {
+	switch f.fieldType {
+	case formcommon.SELECT:
 		f.RemoveTag("multiple")
+		fallthrough
+	case formcommon.CHECKBOX:
 		if strings.HasSuffix(f.name, "[]") {
 			f.name = strings.TrimSuffix(f.name, "[]")
 		}
@@ -279,9 +289,23 @@ func (f *Field) SingleChoice() FieldInterface {
 // If the field is configured as "multiple", AddSelected adds a selected value to the field (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) AddSelected(opt ...string) FieldInterface {
-	if f.fieldType == formcommon.SELECT {
+	switch f.fieldType {
+	case formcommon.SELECT:
 		for _, v := range opt {
-			f.additionalData["multValues"].(map[string]struct{})[v] = struct{}{}
+			i := f.choiceKeys[v]
+			if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
+				if len(vc)>i.Index {
+					f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = true
+				}
+			}
+		}
+	case formcommon.CHECKBOX:
+		size := len(f.choices.([]InputChoice))
+		for _, v := range opt {
+			i := f.choiceKeys[v]
+			if size > i.Index {
+				f.choices.([]InputChoice)[i.Index].Checked = true
+			}
 		}
 	}
 	return f
@@ -290,29 +314,36 @@ func (f *Field) AddSelected(opt ...string) FieldInterface {
 // If the field is configured as "multiple", AddSelected removes the selected value from the field (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) RemoveSelected(opt string) FieldInterface {
-	if f.fieldType == formcommon.SELECT {
-		if _, ok := f.additionalData["multValues"]; ok {
-			delete(f.additionalData["multValues"].(map[string]struct{}), opt)
+	switch f.fieldType {
+	case formcommon.SELECT:
+		i := f.choiceKeys[opt]
+		if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
+			if len(vc)>i.Index {
+				f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = false
+			}
+		}
+
+	case formcommon.CHECKBOX:
+		size := len(f.choices.([]InputChoice))
+		i := f.choiceKeys[opt]
+		if size > i.Index {
+			f.choices.([]InputChoice)[i.Index].Checked = false
 		}
 	}
 	return f
 }
 
-// SetSelectChoices takes as input a dictionary whose key-value entries are defined as follows: key is the group name (the empty string
+// SetChoices takes as input a dictionary whose key-value entries are defined as follows: key is the group name (the empty string
 // is the default group that is not explicitly rendered) and value is the list of choices belonging to that group.
 // Grouping is only useful for Select fields, while groups are ignored in Radio fields.
 // It has no effect if type is not SELECT.
-func (f *Field) SetSelectChoices(choices map[string][]InputChoice) FieldInterface {
-	if f.fieldType == formcommon.SELECT {
-		f.additionalData["choices"] = choices
-	}
-	return f
-}
+func (f *Field) SetChoices(choices interface{}) FieldInterface {
+	switch f.fieldType {
+	case formcommon.SELECT:
+		f.choices, _ = choices.(map[string][]InputChoice)
 
-// SetRadioChoices sets an array of InputChoice objects as the possible choices for a radio field. It has no effect if type is not RADIO.
-func (f *Field) SetRadioChoices(choices []InputChoice) FieldInterface {
-	if f.fieldType == formcommon.RADIO {
-		f.additionalData["choices"] = choices
+	case formcommon.RADIO, formcommon.CHECKBOX:
+		f.choices, _ = choices.([]InputChoice)
 	}
 	return f
 }

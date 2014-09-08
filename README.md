@@ -157,6 +157,7 @@ Struct tags can be used to slightly modify automatic form creation. In particula
 	- number
 	- range
 	- radio
+	- checkbox
 	- static (simple text)
 * form_fieldset: define fieldset name
 * form_sort: sort number (asc, 0 ~ total-1)
@@ -219,9 +220,14 @@ Option fields
 -------------
 
 This category includes checkbox, select and radio button fields.
-Checkbox field requires a name and a boolean to define its initial state (checked or not):
+Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
 
-	f := fields.Checkbox("checkbox", true)
+	opts := []fields.InputChoice{
+		fields.InputChoice{"A", "Option A"},
+		fields.InputChoice{"B", "Option B"},
+	}
+	f := fields.CheckboxField("checkbox", opts)
+	f.AddSelected("A", "B")
 
 Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
 
