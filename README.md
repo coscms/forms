@@ -199,7 +199,7 @@ which translates into:
 Fields
 ======
 
-Field objects in `go-form-it` implement the `fields.FieldInterface` which exposes methods to edit classes, parameters, tags and CSS styles.
+Field objects in `forms` implement the `fields.FieldInterface` which exposes methods to edit classes, parameters, tags and CSS styles.
 See the [documentation](http://godoc.org/github.com/coscms/forms) for details.
 
 Most of the field widgets have already been created and integrate with Bootstrap. It is possible, however, to define custom widgets to render fields by simply assigning an object implementing the widgets.WidgetInterface to the Widget field.
