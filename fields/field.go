@@ -50,7 +50,7 @@ type FieldInterface interface {
 	SetValue(value string) FieldInterface
 	Disabled() FieldInterface
 	Enabled() FieldInterface
-	SetTmpl(text string) FieldInterface
+	SetTmpl(style, tmpl string) FieldInterface
 	SetHelptext(text string) FieldInterface
 	AddError(err string) FieldInterface
 	MultipleChoice() FieldInterface
@@ -83,8 +83,11 @@ func FieldWithType(name, t string) *Field {
 	}
 }
 
-func (f *Field) SetTmpl(text string) FieldInterface {
-	f.tmpl = text
+func (f *Field) SetTmpl(style, tmpl string) FieldInterface {
+	f.tmpl = tmpl
+	if f.tmpl != "" && f.Widget != nil {
+		f.SetStyle(style)
+	}
 	return f
 }
 
