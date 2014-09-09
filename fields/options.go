@@ -156,3 +156,29 @@ func CheckboxFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	}
 	return ret
 }
+
+// Checkbox creates a default checkbox field with the provided name. It also makes it checked by default based
+// on the checked parameter.
+func Checkbox(name string, checked bool) *Field {
+	ret := FieldWithType(name, formcommon.CHECKBOX)
+	if checked {
+		ret.AddTag("checked")
+	}
+	return ret
+}
+
+// CheckboxFromInstance creates and initializes a checkbox field based on its name, the reference object instance, field number and field options.
+// It uses i object's [fieldNo]-th field content (if any) to override the "checked" option in the options map and check the field.
+func CheckboxFromInstance(i interface{}, fieldNo int, name string, options map[string]struct{}) *Field {
+	ret := FieldWithType(name, formcommon.CHECKBOX)
+
+	if _, ok := options["checked"]; ok {
+		ret.AddTag("checked")
+	} else {
+		val := reflect.ValueOf(i).Field(fieldNo).Bool()
+		if val {
+			ret.AddTag("checked")
+		}
+	}
+	return ret
+}
