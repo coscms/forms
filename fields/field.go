@@ -11,6 +11,7 @@ import (
 // Field is a generic type containing all data associated to an input field.
 type Field struct {
 	fieldType      string
+	tmpl           string
 	Widget         widgets.WidgetInterface // Public Widget field for widget customization
 	name           string
 	class          []string
@@ -49,6 +50,7 @@ type FieldInterface interface {
 	SetValue(value string) FieldInterface
 	Disabled() FieldInterface
 	Enabled() FieldInterface
+	SetTmpl(text string) FieldInterface
 	SetHelptext(text string) FieldInterface
 	AddError(err string) FieldInterface
 	MultipleChoice() FieldInterface
@@ -81,9 +83,14 @@ func FieldWithType(name, t string) *Field {
 	}
 }
 
+func (f *Field) SetTmpl(text string) FieldInterface {
+	f.tmpl = text
+	return f
+}
+
 // SetStyle sets the style (e.g.: BASE, BOOTSTRAP) of the field, correctly populating the Widget field.
 func (f *Field) SetStyle(style string) FieldInterface {
-	f.Widget = widgets.BaseWidget(style, f.fieldType)
+	f.Widget = widgets.BaseWidget(style, f.fieldType, f.tmpl)
 	return f
 }
 

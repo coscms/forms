@@ -28,42 +28,92 @@ func (w *Widget) Render(data interface{}) string {
 }
 
 // BaseWidget creates a Widget based on style and inpuType parameters, both defined in the common package.
-func BaseWidget(style, inputType string) *Widget {
+func BaseWidget(style, inputType, tmpl string) *Widget {
 	var fpath string = formcommon.TmplDir + "/" + style + "/"
 	var urls []string = []string{formcommon.CreateUrl(fpath + "generic.tmpl")}
+	var tpath string = widgetTmpl(inputType, tmpl)
+	urls = append(urls, formcommon.CreateUrl(fpath+tpath+".html"))
+	templ := template.Must(template.ParseFiles(urls...))
+	return &Widget{templ}
+}
+
+func widgetTmpl(inputType, tmpl string) (tpath string) {
 	switch inputType {
 	case formcommon.BUTTON:
-		urls = append(urls, formcommon.CreateUrl(fpath+"button.html"))
-	case formcommon.CHECKBOX:
-		urls = append(urls, formcommon.CreateUrl(fpath+"options/checkbox.html"))
+		tpath = "button"
+		if tmpl != "" {
+			tpath = tmpl
+		}
 	case formcommon.TEXTAREA:
-		urls = append(urls, formcommon.CreateUrl(fpath+"text/textareainput.html"))
-	case formcommon.SELECT:
-		urls = append(urls, formcommon.CreateUrl(fpath+"options/select.html"))
+		tpath = "text/textareainput"
+		if tmpl != "" {
+			tpath = "text/" + tmpl
+		}
 	case formcommon.PASSWORD:
-		urls = append(urls, formcommon.CreateUrl(fpath+"text/passwordinput.html"))
-	case formcommon.RADIO:
-		urls = append(urls, formcommon.CreateUrl(fpath+"options/radiobutton.html"))
+		tpath = "text/passwordinput"
+		if tmpl != "" {
+			tpath = "text/" + tmpl
+		}
 	case formcommon.TEXT:
-		urls = append(urls, formcommon.CreateUrl(fpath+"text/textinput.html"))
+		tpath = "text/textinput"
+		if tmpl != "" {
+			tpath = "text/" + tmpl
+		}
+	case formcommon.CHECKBOX:
+		tpath = "options/checkbox"
+		if tmpl != "" {
+			tpath = "options/" + tmpl
+		}
+	case formcommon.SELECT:
+		tpath = "options/select"
+		if tmpl != "" {
+			tpath = "options/" + tmpl
+		}
+	case formcommon.RADIO:
+		tpath = "options/radiobutton"
+		if tmpl != "" {
+			tpath = "options/" + tmpl
+		}
 	case formcommon.RANGE:
-		urls = append(urls, formcommon.CreateUrl(fpath+"number/range.html"))
+		tpath = "number/range"
+		if tmpl != "" {
+			tpath = "number/" + tmpl
+		}
 	case formcommon.NUMBER:
-		urls = append(urls, formcommon.CreateUrl(fpath+"number/number.html"))
-	case formcommon.RESET:
-		urls = append(urls, formcommon.CreateUrl(fpath+"button.html"))
-	case formcommon.SUBMIT:
-		urls = append(urls, formcommon.CreateUrl(fpath+"button.html"))
+		tpath = "number/number"
+		if tmpl != "" {
+			tpath = "number/" + tmpl
+		}
+	case formcommon.RESET, formcommon.SUBMIT:
+		tpath = "button"
+		if tmpl != "" {
+			tpath = tmpl
+		}
 	case formcommon.DATE:
-		urls = append(urls, formcommon.CreateUrl(fpath+"datetime/date.html"))
+		tpath = "datetime/date"
+		if tmpl != "" {
+			tpath = "datetime/" + tmpl
+		}
 	case formcommon.DATETIME:
-		urls = append(urls, formcommon.CreateUrl(fpath+"datetime/datetime.html"))
+		tpath = "datetime/datetime"
+		if tmpl != "" {
+			tpath = "datetime/" + tmpl
+		}
 	case formcommon.TIME:
-		urls = append(urls, formcommon.CreateUrl(fpath+"datetime/time.html"))
+		tpath = "datetime/time"
+		if tmpl != "" {
+			tpath = "datetime/" + tmpl
+		}
 	case formcommon.DATETIME_LOCAL:
-		urls = append(urls, formcommon.CreateUrl(fpath+"datetime/datetime.html"))
+		tpath = "datetime/datetime"
+		if tmpl != "" {
+			tpath = "datetime/" + tmpl
+		}
 	case formcommon.STATIC:
-		urls = append(urls, formcommon.CreateUrl(fpath+"static.html"))
+		tpath = "static"
+		if tmpl != "" {
+			tpath = tmpl
+		}
 	case formcommon.SEARCH,
 		formcommon.TEL,
 		formcommon.URL,
@@ -74,10 +124,12 @@ func BaseWidget(style, inputType string) *Widget {
 		formcommon.HIDDEN,
 		formcommon.IMAGE,
 		formcommon.MONTH:
-		urls = append(urls, formcommon.CreateUrl(fpath+"input.html"))
+		fallthrough
 	default:
-		urls = append(urls, formcommon.CreateUrl(fpath+"input.html"))
+		tpath = "input"
+		if tmpl != "" {
+			tpath = tmpl
+		}
 	}
-	templ := template.Must(template.ParseFiles(urls...))
-	return &Widget{templ}
+	return
 }
