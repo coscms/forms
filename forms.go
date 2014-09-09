@@ -157,7 +157,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				case "string":
 					f = fields.TextFieldFromInstance(m, i, fName)
 				case "bool":
-					f = fields.CheckboxFromInstance(m, i, fName, options)
+					f = fields.CheckboxFieldFromInstance(m, i, fName, options)
 				case "time.Time":
 					f = fields.DatetimeFieldFromInstance(m, i, fName)
 				case "int", "int64":
