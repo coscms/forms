@@ -5,8 +5,9 @@ package widgets
 
 import (
 	"bytes"
-	"github.com/coscms/forms/common"
 	"html/template"
+
+	"github.com/coscms/forms/common"
 )
 
 // Simple widget object that gets executed at render time.
@@ -28,12 +29,19 @@ func (w *Widget) Render(data interface{}) string {
 }
 
 // BaseWidget creates a Widget based on style and inpuType parameters, both defined in the common package.
-func BaseWidget(style, inputType, tmpl string) *Widget {
-	var fpath string = formcommon.TmplDir + "/" + style + "/"
-	var urls []string = []string{formcommon.CreateUrl(fpath + "generic.tmpl")}
-	var tpath string = widgetTmpl(inputType, tmpl)
-	urls = append(urls, formcommon.CreateUrl(fpath+tpath+".html"))
-	templ := template.Must(template.ParseFiles(urls...))
+func BaseWidget(style, inputType, tmplName string) *Widget {
+	var cachedKey string = style+", "+inputType+", "+tmplName
+	templ, ok := formcommon.CachedTemplate(cachedKey)
+	if !ok {
+		var (
+			fpath string = formcommon.TmplDir + "/" + style + "/"
+			urls []string = []string{formcommon.CreateUrl(fpath + "generic.tmpl")}
+			tpath string = widgetTmpl(inputType, tmplName)
+		)
+		urls = append(urls, formcommon.CreateUrl(fpath+tpath+".html"))
+		templ = template.Must(template.ParseFiles(urls...))
+		formcommon.SetCachedTemplate(cachedKey, templ)
+	}
 	return &Widget{templ}
 }
 

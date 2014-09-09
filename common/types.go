@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sync"
+	"html/template"
 
 	"github.com/coscms/tagfast"
 )
@@ -14,6 +16,10 @@ var (
 	LabelFn func(string) string = func(s string) string {
 		return s
 	}
+
+	//private
+	cachedTemplate map[string]*template.Template = make(map[string]*template.Template)
+	lock *sync.RWMutex = new(sync.RWMutex)
 )
 
 const (
@@ -58,10 +64,31 @@ const (
 
 // CreateUrl creates the complete url of the desired widget template
 func CreateUrl(widget string) string {
+	//println(widget)
 	if _, err := os.Stat(widget); os.IsNotExist(err) {
 		return path.Join(os.Getenv("GOPATH"), "src", PACKAGE_NAME, widget)
 	}
 	return widget
+}
+
+func CachedTemplate(cachedKey string) (r *template.Template, ok bool) {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	r, ok = cachedTemplate[cachedKey]
+	return
+}
+
+func SetCachedTemplate(cachedKey string, tmpl *template.Template) bool {
+	lock.Lock()
+	defer lock.Unlock()
+
+	cachedTemplate[cachedKey] = tmpl
+	return true
+}
+
+func ClearCachedTemplate() {
+	cachedTemplate = make(map[string]*template.Template)
 }
 
 func Tag(t reflect.Type, fieldNo int, tagName string) string {

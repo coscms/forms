@@ -38,7 +38,13 @@ func (f *FieldSetType) Render(appendData ...map[string]interface{}) template.HTM
 		}
 	}
 	data["append"] = map[string]interface{}{"container": "fieldset"}
-	err := template.Must(template.ParseFiles(formcommon.CreateUrl(formcommon.TmplDir+"/"+f.tmpl+".html"))).Execute(buf, data)
+	tpf := formcommon.TmplDir+"/"+f.tmpl+".html"
+	tpl, ok := formcommon.CachedTemplate(tpf)
+	if !ok {
+		tpl = template.Must(template.ParseFiles(formcommon.CreateUrl(tpf)))
+		formcommon.SetCachedTemplate(tpf, tpl)
+	}
+	err := tpl.Execute(buf, data)
 	if err != nil {
 		panic(err)
 	}

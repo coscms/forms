@@ -55,9 +55,10 @@ func NewForm(style string, args ...string) *Form {
 		action = args[1]
 		tmplFile = args[2]
 	}
-	tmpl, err := template.ParseFiles(formcommon.CreateUrl(tmplFile))
-	if err != nil {
-		panic(err)
+	tmpl, ok := formcommon.CachedTemplate(tmplFile)
+	if !ok {
+		tmpl = template.Must(template.ParseFiles(formcommon.CreateUrl(tmplFile)))
+		formcommon.SetCachedTemplate(tmplFile, tmpl)
 	}
 	return &Form{
 		make([]FormElement, 0),
