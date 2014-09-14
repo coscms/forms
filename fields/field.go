@@ -59,6 +59,7 @@ type FieldInterface interface {
 	RemoveSelected(opt string) FieldInterface
 	SetChoices(choices interface{}) FieldInterface
 	SetText(text string) FieldInterface
+	String() string
 }
 
 // FieldWithType creates an empty field of the given type and identified by name.
@@ -141,6 +142,14 @@ func (f *Field) Render(appendData ...map[string]interface{}) template.HTML {
 		return template.HTML(f.Widget.Render(data))
 	}
 	return template.HTML("")
+}
+
+func (f *Field) String() string {
+	if f.Widget != nil {
+		data := f.dataForRender()
+		return f.Widget.Render(data)
+	}
+	return ""
 }
 
 // AddClass adds a class to the field.
@@ -304,7 +313,7 @@ func (f *Field) AddSelected(opt ...string) FieldInterface {
 		for _, v := range opt {
 			i := f.choiceKeys[v]
 			if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
-				if len(vc)>i.Index {
+				if len(vc) > i.Index {
 					f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = true
 				}
 			}
@@ -328,7 +337,7 @@ func (f *Field) RemoveSelected(opt string) FieldInterface {
 	case formcommon.SELECT:
 		i := f.choiceKeys[opt]
 		if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
-			if len(vc)>i.Index {
+			if len(vc) > i.Index {
 				f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = false
 			}
 		}
