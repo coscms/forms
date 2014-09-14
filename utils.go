@@ -2,6 +2,7 @@ package forms
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"reflect"
 	"strconv"
@@ -49,6 +50,10 @@ func (f *Form) dataForRender() string {
 // in any other template.
 func (f *Form) Render() template.HTML {
 	return template.HTML(f.dataForRender())
+}
+
+func (f *Form) Html(value interface{}) template.HTML {
+	return template.HTML(fmt.Sprintf("%v", value))
 }
 
 func (f *Form) String() string {
