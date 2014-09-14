@@ -217,6 +217,10 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 						fmt.Println(err)
 					}
 				}
+				valid := formcommon.Tag(t, i, "valid")
+				if valid != "" {
+					ValidTagFn(valid, f)
+				}
 				fieldset := formcommon.Tag(t, i, "form_fieldset")
 				fieldsort := formcommon.Tag(t, i, "form_sort")
 				if fieldset != "" {
@@ -254,4 +258,66 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 		fieldList = append(fieldList, v)
 	}
 	return fieldList, fieldSort
+}
+
+var ValidTagFn func(string, fields.FieldInterface) = func(valid string, f fields.FieldInterface) {
+	//for jQuery-Validation-Engine
+	validFuncs := strings.Split(valid, ";")
+	var validClass string
+	for _, v := range validFuncs {
+		pos := strings.Index(v, "(")
+		var fn string
+		if pos > -1 {
+			fn = v[0:pos]
+		} else {
+			fn = v
+		}
+		switch fn {
+		case "Required":
+			validClass += "," + strings.ToLower(fn)
+		case "Min", "Max":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			validClass += "," + strings.ToLower(fn) + "[" + val + "]"
+		case "Range":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			rangeVals := strings.SplitN(val, ",", 2)
+			validClass += ",min[" + strings.TrimSpace(rangeVals[0]) + "],max[" + strings.TrimSpace(rangeVals[1]) + "]"
+		case "MinSize":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			validClass += ",minSize[" + val + "]"
+		case "MaxSize":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			validClass += ",maxSize[" + val + "]"
+		case "Numeric":
+			validClass += ",number"
+		case "AlphaNumeric":
+			validClass += ",custom[onlyLetterNumber]"
+		/*
+			case "Length":
+				validClass += ",length"
+			case "Match":
+				val := v[pos+1:]
+				val = strings.TrimSuffix(val, ")")
+				val = strings.Trim(val, "/")
+				validClass += ",match[]"
+		*/
+		case "AlphaDash":
+			validClass += ",custom[onlyLetterNumber]"
+		case "IP":
+			validClass += ",custom[ipv4]"
+		case "Alpha", "Email", "Base64", "Mobile", "Tel", "Phone":
+			validClass += ",custom[" + strings.ToLower(fn) + "]"
+		case "ZipCode":
+			validClass += ",custom[zip]"
+		}
+	}
+	if validClass != "" {
+		validClass = strings.TrimPrefix(validClass, ",")
+		validClass = "validate[" + validClass + "]"
+		f.AddClass(validClass)
+	}
 }
