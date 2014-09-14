@@ -12,13 +12,17 @@ import (
 
 // FormElement interface defines a form object (usually a Field or a FieldSet) that can be rendered as a template.HTML object.
 type FormElement interface {
-	Render(appendData ...map[string]interface{}) template.HTML
+	Render() template.HTML
 	Name() string
+	String() string
+	SetData(key string, value interface{})
 }
 
-// Render executes the internal template and renders the form, returning the result as a template.HTML object embeddable
-// in any other template.
-func (f *Form) Render(appendData ...map[string]interface{}) template.HTML {
+func (f *Form) SetData(key string, value interface{}) {
+	f.AppendData[key] = value
+}
+
+func (f *Form) dataForRender() string {
 	var s string
 	buf := bytes.NewBufferString(s)
 	data := map[string]interface{}{
@@ -31,16 +35,24 @@ func (f *Form) Render(appendData ...map[string]interface{}) template.HTML {
 		"method":    f.method,
 		"action":    f.action,
 	}
-	for _, val := range appendData {
-		for k, v := range val {
-			data[k] = v
-		}
+	for k, v := range f.AppendData {
+		data[k] = v
 	}
 	err := f.template.Execute(buf, data)
 	if err != nil {
 		panic(err)
 	}
-	return template.HTML(buf.String())
+	return buf.String()
+}
+
+// Render executes the internal template and renders the form, returning the result as a template.HTML object embeddable
+// in any other template.
+func (f *Form) Render() template.HTML {
+	return template.HTML(f.dataForRender())
+}
+
+func (f *Form) String() string {
+	return f.dataForRender()
 }
 
 // Elements adds the provided elements to the form.
@@ -67,6 +79,7 @@ func (f *Form) addField(field fields.FieldInterface) *Form {
 func (f *Form) addFieldSet(fs *FieldSetType) *Form {
 	for _, v := range fs.fields {
 		v.SetStyle(f.style)
+		v.SetData("container", "fieldset")
 		f.containerMap[v.Name()] = fs.name
 	}
 	f.fields = append(f.fields, fs)

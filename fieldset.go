@@ -13,16 +13,20 @@ import (
 
 // FieldSetType is a collection of fields grouped within a form.
 type FieldSetType struct {
-	tmpl     string
-	name     string
-	class    map[string]struct{}
-	tags     map[string]struct{}
-	fields   []fields.FieldInterface
-	fieldMap map[string]int
+	tmpl       string
+	name       string
+	class      map[string]struct{}
+	tags       map[string]struct{}
+	fields     []fields.FieldInterface
+	fieldMap   map[string]int
+	AppendData map[string]interface{}
 }
 
-// Render translates a FieldSetType into HTML code and returns it as a template.HTML object.
-func (f *FieldSetType) Render(appendData ...map[string]interface{}) template.HTML {
+func (f *FieldSetType) SetData(key string, value interface{}) {
+	f.AppendData[key] = value
+}
+
+func (f *FieldSetType) dataForRender() string {
 	var s string
 	buf := bytes.NewBufferString(s)
 	data := map[string]interface{}{
@@ -32,13 +36,10 @@ func (f *FieldSetType) Render(appendData ...map[string]interface{}) template.HTM
 		"classes":   f.class,
 		"tags":      f.tags,
 	}
-	for _, val := range appendData {
-		for k, v := range val {
-			data[k] = v
-		}
+	for k, v := range f.AppendData {
+		data[k] = v
 	}
-	data["append"] = map[string]interface{}{"container": "fieldset"}
-	tpf := formcommon.TmplDir+"/"+f.tmpl+".html"
+	tpf := formcommon.TmplDir + "/" + f.tmpl + ".html"
 	tpl, ok := formcommon.CachedTemplate(tpf)
 	if !ok {
 		tpl = template.Must(template.ParseFiles(formcommon.CreateUrl(tpf)))
@@ -48,7 +49,16 @@ func (f *FieldSetType) Render(appendData ...map[string]interface{}) template.HTM
 	if err != nil {
 		panic(err)
 	}
-	return template.HTML(buf.String())
+	return buf.String()
+}
+
+// Render translates a FieldSetType into HTML code and returns it as a template.HTML object.
+func (f *FieldSetType) Render() template.HTML {
+	return template.HTML(f.dataForRender())
+}
+
+func (f *FieldSetType) String() string {
+	return f.dataForRender()
 }
 
 func (f *FieldSetType) SetTmpl(tmpl string) *FieldSetType {
@@ -60,12 +70,13 @@ func (f *FieldSetType) SetTmpl(tmpl string) *FieldSetType {
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func FieldSet(name string, elems ...fields.FieldInterface) *FieldSetType {
 	ret := &FieldSetType{
-		"fieldset",
-		name,
-		map[string]struct{}{},
-		map[string]struct{}{},
-		elems,
-		map[string]int{},
+		tmpl:       "fieldset",
+		name:       name,
+		class:      map[string]struct{}{},
+		tags:       map[string]struct{}{},
+		fields:     elems,
+		fieldMap:   map[string]int{},
+		AppendData: map[string]interface{}{},
 	}
 	for i, elem := range elems {
 		ret.fieldMap[elem.Name()] = i

@@ -27,13 +27,14 @@ type Field struct {
 	additionalData map[string]interface{}
 	choices        interface{}
 	choiceKeys     map[string]ChoiceIndex
+	AppendData     map[string]interface{}
 }
 
 // FieldInterface defines the interface an object must implement to be used in a form. Every method returns a FieldInterface object
 // to allow methods chaining.
 type FieldInterface interface {
 	Name() string
-	Render(appendData ...map[string]interface{}) template.HTML
+	Render() template.HTML
 	AddClass(class string) FieldInterface
 	RemoveClass(class string) FieldInterface
 	AddTag(class string) FieldInterface
@@ -59,6 +60,7 @@ type FieldInterface interface {
 	RemoveSelected(opt string) FieldInterface
 	SetChoices(choices interface{}) FieldInterface
 	SetText(text string) FieldInterface
+	SetData(key string, value interface{})
 	String() string
 }
 
@@ -81,6 +83,7 @@ func FieldWithType(name, t string) *Field {
 		additionalData: map[string]interface{}{},
 		choices:        nil,
 		choiceKeys:     map[string]ChoiceIndex{},
+		AppendData:     map[string]interface{}{},
 	}
 }
 
@@ -98,12 +101,16 @@ func (f *Field) SetStyle(style string) FieldInterface {
 	return f
 }
 
+func (f *Field) SetData(key string, value interface{}) {
+	f.AppendData[key] = value
+}
+
 // Name returns the name of the field.
 func (f *Field) Name() string {
 	return strings.TrimSuffix(f.name, "[]")
 }
 
-func (f *Field) dataForRender(appendData ...map[string]interface{}) map[string]interface{} {
+func (f *Field) dataForRender() map[string]interface{} {
 	safeParams := make(map[template.HTMLAttr]string)
 	for k, v := range f.params {
 		safeParams[template.HTMLAttr(k)] = v
@@ -127,18 +134,16 @@ func (f *Field) dataForRender(appendData ...map[string]interface{}) map[string]i
 	for k, v := range f.additionalData {
 		data[k] = v
 	}
-	for _, val := range appendData {
-		for k, v := range val {
-			data[k] = v
-		}
+	for k, v := range f.AppendData {
+		data[k] = v
 	}
 	return data
 }
 
 // Render packs all data and executes widget render method.
-func (f *Field) Render(appendData ...map[string]interface{}) template.HTML {
+func (f *Field) Render() template.HTML {
 	if f.Widget != nil {
-		data := f.dataForRender(appendData...)
+		data := f.dataForRender()
 		return template.HTML(f.Widget.Render(data))
 	}
 	return template.HTML("")

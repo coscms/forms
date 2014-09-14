@@ -34,6 +34,7 @@ type Form struct {
 	css          map[string]string
 	method       string
 	action       template.HTML
+	AppendData   map[string]interface{}
 }
 
 func NewForm(style string, args ...string) *Form {
@@ -61,17 +62,18 @@ func NewForm(style string, args ...string) *Form {
 		formcommon.SetCachedTemplate(tmplFile, tmpl)
 	}
 	return &Form{
-		make([]FormElement, 0),
-		make(map[string]int),
-		make(map[string]string),
-		style,
-		tmpl,
-		[]string{},
-		"",
-		map[string]string{},
-		map[string]string{},
-		method,
-		template.HTML(action),
+		fields:       make([]FormElement, 0),
+		fieldMap:     make(map[string]int),
+		containerMap: make(map[string]string),
+		style:        style,
+		template:     tmpl,
+		class:        []string{},
+		id:           "",
+		params:       map[string]string{},
+		css:          map[string]string{},
+		method:       method,
+		action:       template.HTML(action),
+		AppendData:   map[string]interface{}{},
 	}
 }
 
@@ -219,6 +221,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				fieldsort := formcommon.Tag(t, i, "form_sort")
 				if fieldset != "" {
 					fieldset = formcommon.LabelFn(fieldset)
+					f.SetData("container", "fieldset")
 					if _, ok := fieldSetList[fieldset]; !ok {
 						fieldSetList[fieldset] = FieldSet(fieldset, f)
 					} else {
