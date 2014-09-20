@@ -28,6 +28,7 @@ type Field struct {
 	choices        interface{}
 	choiceKeys     map[string]ChoiceIndex
 	AppendData     map[string]interface{}
+	tmplStyle      string
 }
 
 // FieldInterface defines the interface an object must implement to be used in a form. Every method returns a FieldInterface object
@@ -51,7 +52,7 @@ type FieldInterface interface {
 	SetValue(value string) FieldInterface
 	Disabled() FieldInterface
 	Enabled() FieldInterface
-	SetTmpl(style, tmpl string) FieldInterface
+	SetTmpl(tmpl string, style ...string) FieldInterface
 	SetHelptext(text string) FieldInterface
 	AddError(err string) FieldInterface
 	MultipleChoice() FieldInterface
@@ -84,19 +85,27 @@ func FieldWithType(name, t string) *Field {
 		choices:        nil,
 		choiceKeys:     map[string]ChoiceIndex{},
 		AppendData:     map[string]interface{}{},
+		tmplStyle:      "",
 	}
 }
 
-func (f *Field) SetTmpl(style, tmpl string) FieldInterface {
+func (f *Field) SetTmpl(tmpl string, style ...string) FieldInterface {
 	f.tmpl = tmpl
 	if f.tmpl != "" && f.Widget != nil {
-		f.SetStyle(style)
+		var s string
+		if len(style)>0 {
+			s = style[0]
+		}else{
+			s = f.tmplStyle
+		}
+		f.Widget = widgets.BaseWidget(s, f.fieldType, f.tmpl)
 	}
 	return f
 }
 
 // SetStyle sets the style (e.g.: BASE, BOOTSTRAP) of the field, correctly populating the Widget field.
 func (f *Field) SetStyle(style string) FieldInterface {
+	f.tmplStyle = style
 	f.Widget = widgets.BaseWidget(style, f.fieldType, f.tmpl)
 	return f
 }
