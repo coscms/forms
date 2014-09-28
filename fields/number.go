@@ -36,10 +36,9 @@ func NumberField(name string) *Field {
 // NumberFieldFromInstance creates and initializes a number field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func NumberFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func NumberFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := NumberField(name)
 	// check tags
-	t := reflect.TypeOf(i)
 	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
 		ret.SetParam("min", v)
 	}
@@ -49,7 +48,7 @@ func NumberFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
 	} else {
-		ret.SetValue(fmt.Sprintf("%v", reflect.ValueOf(i).Field(fieldNo).Interface()))
+		ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	}
 	return ret
 }
@@ -57,10 +56,9 @@ func NumberFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 // RangeFieldFromInstance creates and initializes a range field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max", "form_step" and "form_value" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func RangeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func RangeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := RangeField(name, 0, 10, 1)
 	// check tags
-	t := reflect.TypeOf(i)
 	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
 		ret.SetParam("min", v)
 	}
@@ -73,7 +71,7 @@ func RangeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
 	} else {
-		ret.SetValue(fmt.Sprintf("%v", reflect.ValueOf(i).Field(fieldNo).Interface()))
+		ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	}
 	return ret
 }

@@ -48,8 +48,7 @@ func RadioField(name string, choices []InputChoice) *Field {
 // This method looks for "form_choices" and "form_value" tags to add additional parameters to the field. "form_choices" tag is a list
 // of <id>|<value> options, joined by "|" character; ex: "A|Option A|B|Option B" translates into 2 options: <A, Option A> and <B, Option B>.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func RadioFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
-	t := reflect.TypeOf(i)
+func RadioFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
 	chArr := make([]InputChoice, 0)
 	ret := RadioField(name, chArr)
@@ -62,7 +61,7 @@ func RadioFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	ret.SetChoices(chArr)
 	var v string = formcommon.Tag(t, fieldNo, "form_value")
 	if v == "" {
-		v = fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String())
+		v = fmt.Sprintf("%s", val.Field(fieldNo).String())
 	}
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
@@ -86,8 +85,7 @@ func SelectField(name string, choices map[string][]InputChoice) *Field {
 // of <group<|<id>|<value> options, joined by "|" character; ex: "G1|A|Option A|G1|B|Option B" translates into 2 options in the same group G1:
 // <A, Option A> and <B, Option B>. "" group is the default one.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func SelectFieldFromInstance(i interface{}, fieldNo int, name string, options map[string]struct{}) *Field {
-	t := reflect.TypeOf(i)
+func SelectFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
 	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
 	chArr := make(map[string][]InputChoice)
 	ret := SelectField(name, chArr)
@@ -108,7 +106,7 @@ func SelectFieldFromInstance(i interface{}, fieldNo int, name string, options ma
 		ret.MultipleChoice()
 	}
 
-	var v string = fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String())
+	var v string = fmt.Sprintf("%s", val.Field(fieldNo).String())
 	if v == "" {
 		// TODO: multiple value parsing
 		v = formcommon.Tag(t, fieldNo, "form_value")
@@ -131,8 +129,7 @@ func CheckboxField(name string, choices []InputChoice) *Field {
 	return ret
 }
 
-func CheckboxFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
-	t := reflect.TypeOf(i)
+func CheckboxFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
 	chArr := make([]InputChoice, 0)
 	ret := CheckboxField(name, chArr)
@@ -149,7 +146,7 @@ func CheckboxFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 
 	var v string = formcommon.Tag(t, fieldNo, "form_value")
 	if v == "" {
-		v = fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String())
+		v = fmt.Sprintf("%s", val.Field(fieldNo).String())
 	}
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
@@ -169,14 +166,14 @@ func Checkbox(name string, checked bool) *Field {
 
 // CheckboxFromInstance creates and initializes a checkbox field based on its name, the reference object instance, field number and field options.
 // It uses i object's [fieldNo]-th field content (if any) to override the "checked" option in the options map and check the field.
-func CheckboxFromInstance(i interface{}, fieldNo int, name string, options map[string]struct{}) *Field {
+func CheckboxFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
 	ret := FieldWithType(name, formcommon.CHECKBOX)
 
 	if _, ok := options["checked"]; ok {
 		ret.AddTag("checked")
 	} else {
-		val := reflect.ValueOf(i).Field(fieldNo).Bool()
-		if val {
+		v := val.Field(fieldNo).Bool()
+		if v {
 			ret.AddTag("checked")
 		}
 	}

@@ -52,10 +52,9 @@ func TimeField(name string) *Field {
 // DatetimeFieldFromInstance creates and initializes a datetime field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func DatetimeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func DatetimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := DatetimeField(name)
 	// check tags
-	t := reflect.TypeOf(i)
 	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
 		if !validateDatetime(v) {
 			panic(errors.New(fmt.Sprintf("Invalid date value (min) for field: %s", name)))
@@ -71,7 +70,7 @@ func DatetimeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
 	} else {
-		if v := reflect.ValueOf(i).Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
 			ret.SetValue(v.Format(DATETIME_FORMAT))
 		}
 	}
@@ -81,10 +80,9 @@ func DatetimeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 // DateFieldFromInstance creates and initializes a date field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func DateFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func DateFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := DateField(name)
 	// check tags
-	t := reflect.TypeOf(i)
 	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
 		if !validateDate(v) {
 			panic(errors.New(fmt.Sprintf("Invalid date value (min) for field", name)))
@@ -100,7 +98,7 @@ func DateFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
 	} else {
-		if v := reflect.ValueOf(i).Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
 			ret.SetValue(v.Format(DATE_FORMAT))
 		}
 	}
@@ -110,10 +108,9 @@ func DateFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 // TimeFieldFromInstance creates and initializes a time field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
-func TimeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func TimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := TimeField(name)
 	// check tags
-	t := reflect.TypeOf(i)
 	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
 		if !validateTime(v) {
 			panic(errors.New(fmt.Sprintf("Invalid time value (min) for field", name)))
@@ -129,7 +126,7 @@ func TimeFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
 	} else {
-		if v := reflect.ValueOf(i).Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
 			ret.SetValue(v.Format(TIME_FORMAT))
 		}
 	}

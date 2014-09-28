@@ -130,43 +130,43 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 			//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
 			switch widget {
 			case "text":
-				f = fields.TextFieldFromInstance(m, i, fName)
+				f = fields.TextFieldFromInstance(v, t, i, fName)
 			case "hidden":
-				f = fields.HiddenFieldFromInstance(m, i, fName)
+				f = fields.HiddenFieldFromInstance(v, t, i, fName)
 			case "textarea":
-				f = fields.TextAreaFieldFromInstance(m, i, fName)
+				f = fields.TextAreaFieldFromInstance(v, t, i, fName)
 			case "password":
-				f = fields.PasswordFieldFromInstance(m, i, fName)
+				f = fields.PasswordFieldFromInstance(v, t, i, fName)
 			case "select":
-				f = fields.SelectFieldFromInstance(m, i, fName, options)
+				f = fields.SelectFieldFromInstance(v, t, i, fName, options)
 			case "date":
-				f = fields.DateFieldFromInstance(m, i, fName)
+				f = fields.DateFieldFromInstance(v, t, i, fName)
 			case "datetime":
-				f = fields.DatetimeFieldFromInstance(m, i, fName)
+				f = fields.DatetimeFieldFromInstance(v, t, i, fName)
 			case "time":
-				f = fields.TimeFieldFromInstance(m, i, fName)
+				f = fields.TimeFieldFromInstance(v, t, i, fName)
 			case "number":
-				f = fields.NumberFieldFromInstance(m, i, fName)
+				f = fields.NumberFieldFromInstance(v, t, i, fName)
 			case "range":
-				f = fields.RangeFieldFromInstance(m, i, fName)
+				f = fields.RangeFieldFromInstance(v, t, i, fName)
 			case "radio":
-				f = fields.RadioFieldFromInstance(m, i, fName)
+				f = fields.RadioFieldFromInstance(v, t, i, fName)
 			case "checkbox":
-				f = fields.CheckboxFieldFromInstance(m, i, fName)
+				f = fields.CheckboxFieldFromInstance(v, t, i, fName)
 			case "static":
-				f = fields.StaticFieldFromInstance(m, i, fName)
+				f = fields.StaticFieldFromInstance(v, t, i, fName)
 			default:
 				switch t.Field(i).Type.String() {
 				case "string":
-					f = fields.TextFieldFromInstance(m, i, fName)
+					f = fields.TextFieldFromInstance(v, t, i, fName)
 				case "bool":
-					f = fields.CheckboxFromInstance(m, i, fName, options)
+					f = fields.CheckboxFromInstance(v, t, i, fName, options)
 				case "time.Time":
-					f = fields.DatetimeFieldFromInstance(m, i, fName)
+					f = fields.DatetimeFieldFromInstance(v, t, i, fName)
 				case "int", "int64":
-					f = fields.NumberFieldFromInstance(m, i, fName)
+					f = fields.NumberFieldFromInstance(v, t, i, fName)
 				case "float", "float64":
-					f = fields.NumberFieldFromInstance(m, i, fName)
+					f = fields.NumberFieldFromInstance(v, t, i, fName)
 				case "struct":
 					fl, fs := unWindStructure(v.Field(i).Interface(), fName)
 					if fs != "" {
@@ -192,7 +192,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 						fieldList = append(fieldList, fl...)
 						f = nil
 					} else {
-						f = fields.TextFieldFromInstance(m, i, fName)
+						f = fields.TextFieldFromInstance(v, t, i, fName)
 					}
 				}
 			}

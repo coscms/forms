@@ -57,25 +57,24 @@ func HiddenField(name string) *Field {
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
 // It uses i object's [fieldNo]-th field content to set the field content.
-func TextFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func TextFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := TextField(name)
-	ret.SetValue(fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String()))
+	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
 	return ret
 }
 
 // PasswordFieldFromInstance creates and initializes a password field based on its name, the reference object instance and field number.
 // It uses i object's [fieldNo]-th field content to set the field content.
-func PasswordFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func PasswordFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := PasswordField(name)
-	ret.SetValue(fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String()))
+	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
 	return ret
 }
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
 // This method looks for "form_rows" and "form_cols" tags to add additional parameters to the field.
 // It also uses i object's [fieldNo]-th field content to set the field content.
-func TextAreaFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
-	t := reflect.TypeOf(i)
+func TextAreaFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	var rows, cols int = 20, 50
 	var err error
 	if v := formcommon.Tag(t, fieldNo, "form_rows"); v != "" {
@@ -91,14 +90,14 @@ func TextAreaFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
 		}
 	}
 	ret := TextAreaField(name, rows, cols)
-	ret.SetText(fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).String()))
+	ret.SetText(fmt.Sprintf("%s", val.Field(fieldNo).String()))
 	return ret
 }
 
 // HiddenFieldFromInstance creates and initializes a hidden field based on its name, the reference object instance and field number.
 // It uses i object's [fieldNo]-th field content to set the field content.
-func HiddenFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
+func HiddenFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := HiddenField(name)
-	ret.SetValue(fmt.Sprintf("%v", reflect.ValueOf(i).Field(fieldNo).Interface()))
+	ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	return ret
 }

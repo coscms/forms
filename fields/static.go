@@ -20,7 +20,7 @@ func StaticField(name, content string) *Field {
 
 // RadioFieldFromInstance creates and initializes a radio field based on its name, the reference object instance and field number.
 // It uses i object's [fieldNo]-th field content (if any) to set the field content.
-func StaticFieldFromInstance(i interface{}, fieldNo int, name string) *Field {
-	ret := StaticField(name, fmt.Sprintf("%s", reflect.ValueOf(i).Field(fieldNo).Interface()))
+func StaticFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+	ret := StaticField(name, fmt.Sprintf("%s", val.Field(fieldNo).Interface()))
 	return ret
 }
