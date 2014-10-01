@@ -2,11 +2,13 @@
 package formcommon
 
 import (
+	"bytes"
+	"fmt"
+	"html/template"
 	"os"
 	"path"
 	"reflect"
 	"sync"
-	"html/template"
 
 	"github.com/coscms/tagfast"
 )
@@ -19,7 +21,7 @@ var (
 
 	//private
 	cachedTemplate map[string]*template.Template = make(map[string]*template.Template)
-	lock *sync.RWMutex = new(sync.RWMutex)
+	lock           *sync.RWMutex                 = new(sync.RWMutex)
 )
 
 const (
@@ -89,6 +91,33 @@ func SetCachedTemplate(cachedKey string, tmpl *template.Template) bool {
 
 func ClearCachedTemplate() {
 	cachedTemplate = make(map[string]*template.Template)
+}
+
+func ParseTmpl(data interface{}, fn_tpl template.FuncMap, fn_fixTpl func(tpls ...string) ([]string, error), tpls ...string) string {
+	var s string
+	buf := bytes.NewBufferString(s)
+	tpf := fmt.Sprintf("%v", tpls)
+	tpl, ok := CachedTemplate(tpf)
+	if !ok {
+		c := template.New(path.Base(tpls[0]))
+		if fn_tpl != nil {
+			c.Funcs(fn_tpl)
+		}
+		if fn_fixTpl != nil {
+			var err error
+			tpls, err = fn_fixTpl(tpls...)
+			if err != nil {
+				return fmt.Sprintf(`%v`, err)
+			}
+		}
+		tpl = template.Must(c.ParseFiles(tpls...))
+		SetCachedTemplate(tpf, tpl)
+	}
+	err := tpl.Execute(buf, data)
+	if err != nil {
+		panic(err)
+	}
+	return buf.String()
 }
 
 func Tag(t reflect.Type, fieldNo int, tagName string) string {
