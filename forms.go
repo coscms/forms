@@ -260,7 +260,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	return fieldList, fieldSort
 }
 
-var ValidTagFn func(string, fields.FieldInterface) = ValidationEngine
+var ValidTagFn func(string, fields.FieldInterface) = Html5Validate
 
 func ValidationEngine(valid string, f fields.FieldInterface) {
 	//for jQuery-Validation-Engine
