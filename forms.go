@@ -13,6 +13,7 @@ import (
 
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/fields"
+	"github.com/coscms/xweb/validation"
 )
 
 // Form methods: POST or GET.
@@ -35,7 +36,37 @@ type Form struct {
 	method       string
 	action       template.HTML
 	AppendData   map[string]interface{}
+	valid        *validation.Validation
+	model        interface{}
 }
+
+func (f *Form) Valid(args ...string) (valid *validation.Validation, passed bool) {
+	if f.valid == nil {
+		f.valid = &validation.Validation{}
+	}
+	valid = f.valid
+	if f.model == nil {
+		return
+	}
+	var err error
+	passed, err = valid.Valid(f.model, args...)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if !passed { // validation does not pass
+		for field, err := range valid.ErrorsMap {
+			f.Field(field).AddError(formcommon.LabelFn(err.Message))
+		}
+	}
+	return
+}
+
+func (f *Form) SetModel(m interface{}) *Form {
+	f.model = m
+	return f
+}
+
 
 func NewForm(style string, args ...string) *Form {
 	if style == "" {
@@ -84,6 +115,7 @@ func NewForm(style string, args ...string) *Form {
 // nested structs are also converted and added to the form.
 func NewFormFromModel(m interface{}, style string, args ...string) *Form {
 	form := NewForm(style, args...)
+	form.SetModel(m)
 	flist, fsort := unWindStructure(m, "")
 	for _, v := range flist {
 		form.Elements(v.(FormElement))
