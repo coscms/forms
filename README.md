@@ -65,6 +65,26 @@ Typical usage looks like this:
 		fields.SubmitButton("btn1", "Submit"),
 		)
 
+validation:
+
+	
+	type User struct {
+		Username 	string
+		Password1 	string
+		Password2	string
+	}
+
+	u := &User{}
+	form.SetModel(u) //Must set model
+	valid, passed := form.valid()
+	if !passed { 
+		// validation does not pass
+	}
+	_ = valid
+
+
+Details about validation, please visit: https://github.com/coscms/xweb/blob/master/validation/README.md
+
 A call to `form.Render()` returns the following form:
 	
 	<form method="POST" action="/action.html">
@@ -100,9 +120,18 @@ Without tags this code:
 		Password2	string
 	}
 
-	u := User{}
+	u := &User{}
 
 	form := NewFormFromModel(u, "bootstrap3", POST, "/action.html")
+
+validation:
+
+	valid, passed := form.valid()
+	if !passed { 
+		// validation does not pass
+	}
+	_ = valid
+
 	form.Render()
 
 would yield this HTML form:
