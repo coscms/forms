@@ -260,7 +260,9 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	return fieldList, fieldSort
 }
 
-var ValidTagFn func(string, fields.FieldInterface) = func(valid string, f fields.FieldInterface) {
+var ValidTagFn func(string, fields.FieldInterface) = ValidationEngine
+
+func ValidationEngine(valid string, f fields.FieldInterface) {
 	//for jQuery-Validation-Engine
 	validFuncs := strings.Split(valid, ";")
 	var validClass string
@@ -319,5 +321,73 @@ var ValidTagFn func(string, fields.FieldInterface) = func(valid string, f fields
 		validClass = strings.TrimPrefix(validClass, ",")
 		validClass = "validate[" + validClass + "]"
 		f.AddClass(validClass)
+	}
+}
+
+func Html5Validate(valid string, f fields.FieldInterface) {
+	validFuncs := strings.Split(valid, ";")
+	for _, v := range validFuncs {
+		pos := strings.Index(v, "(")
+		var fn string
+		if pos > -1 {
+			fn = v[0:pos]
+		} else {
+			fn = v
+		}
+		switch fn {
+		case "Required":
+			f.AddTag(strings.ToLower(fn))
+		case "Min", "Max":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			f.SetParam(strings.ToLower(fn), val)
+		case "Range":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			rangeVals := strings.SplitN(val, ",", 2)
+			f.SetParam("min", strings.TrimSpace(rangeVals[0]))
+			f.SetParam("max", strings.TrimSpace(rangeVals[1]))
+		case "MinSize":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			f.SetParam("data-min", val)
+		case "MaxSize":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			f.SetParam("maxlength", val)
+			f.SetParam("data-max", val)
+		case "Numeric":
+			f.SetParam("pattern", template.HTML("^\\-?\\d+(\\.\\d+)?$"))
+		case "AlphaNumeric":
+			f.SetParam("pattern", template.HTML("^[\\w\\d]+$"))
+		case "Length":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			f.SetParam("pattern", ".{"+val+"}")
+		case "Match":
+			val := v[pos+1:]
+			val = strings.TrimSuffix(val, ")")
+			val = strings.Trim(val, "/")
+			f.SetParam("pattern", template.HTML(val))
+
+		case "AlphaDash":
+			f.SetParam("pattern", template.HTML("^[\\d\\w-]+$"))
+		case "IP":
+			f.SetParam("pattern", template.HTML("^((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)$"))
+		case "Alpha":
+			f.SetParam("pattern", template.HTML("^[a-zA-Z]+$"))
+		case "Email":
+			f.SetParam("pattern", template.HTML("[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?"))
+		case "Base64":
+			f.SetParam("pattern", template.HTML("^(?:[A-Za-z0-99+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))
+		case "Mobile":
+			f.SetParam("pattern", template.HTML("^((\\+86)|(86))?(1(([35][0-9])|(47)|[8][\\d]))\\d{8}$"))
+		case "Tel":
+			f.SetParam("pattern", template.HTML("^(0\\d{2,3}(\\-)?)?\\d{7,8}$"))
+		case "Phone":
+			f.SetParam("pattern", template.HTML("^(((\\+86)|(86))?(1(([35][0-9])|(47)|[8][012356789]))\\d{8}|(0\\d{2,3}(\\-)?)?\\d{7,8})$"))
+		case "ZipCode":
+			f.SetParam("pattern", template.HTML("^[1-9]\\d{5}$"))
+		}
 	}
 }

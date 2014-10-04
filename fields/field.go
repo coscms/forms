@@ -16,7 +16,7 @@ type Field struct {
 	name           string
 	class          []string
 	id             string
-	params         map[string]string
+	params         map[string]interface{}
 	css            map[string]string
 	label          string
 	labelClass     []string
@@ -41,7 +41,7 @@ type FieldInterface interface {
 	AddTag(class string) FieldInterface
 	RemoveTag(class string) FieldInterface
 	SetId(id string) FieldInterface
-	SetParam(key, value string) FieldInterface
+	SetParam(key string, value interface{}) FieldInterface
 	DeleteParam(key string) FieldInterface
 	AddCss(key, value string) FieldInterface
 	RemoveCss(key string) FieldInterface
@@ -73,7 +73,7 @@ func FieldWithType(name, t string) *Field {
 		name:           name,
 		class:          []string{},
 		id:             "",
-		params:         map[string]string{},
+		params:         map[string]interface{}{},
 		css:            map[string]string{},
 		label:          "",
 		labelClass:     []string{},
@@ -93,9 +93,9 @@ func (f *Field) SetTmpl(tmpl string, style ...string) FieldInterface {
 	f.tmpl = tmpl
 	if f.tmpl != "" && f.Widget != nil {
 		var s string
-		if len(style)>0 {
+		if len(style) > 0 {
 			s = style[0]
-		}else{
+		} else {
 			s = f.tmplStyle
 		}
 		f.Widget = widgets.BaseWidget(s, f.fieldType, f.tmpl)
@@ -120,7 +120,7 @@ func (f *Field) Name() string {
 }
 
 func (f *Field) dataForRender() map[string]interface{} {
-	safeParams := make(map[template.HTMLAttr]string)
+	safeParams := make(map[template.HTMLAttr]interface{})
 	for k, v := range f.params {
 		safeParams[template.HTMLAttr(k)] = v
 	}
@@ -223,7 +223,7 @@ func (f *Field) RemoveLabelClass(class string) FieldInterface {
 }
 
 // SetParam adds a parameter (defined as key-value pair) in the field.
-func (f *Field) SetParam(key, value string) FieldInterface {
+func (f *Field) SetParam(key string, value interface{}) FieldInterface {
 	f.params[key] = value
 	return f
 }
