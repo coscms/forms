@@ -69,9 +69,9 @@ validation:
 
 	
 	type User struct {
-		Username 	string
-		Password1 	string
-		Password2	string
+		Username 	string	`valid:"Required;AlphaDash;MaxSize(30)"`
+		Password1 	string	`valid:"Required"`
+		Password2	string	`valid:"Required"`
 	}
 
 	u := &User{}
