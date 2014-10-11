@@ -59,7 +59,7 @@ type FieldInterface interface {
 	SingleChoice() FieldInterface
 	AddSelected(opt ...string) FieldInterface
 	RemoveSelected(opt string) FieldInterface
-	SetChoices(choices interface{}) FieldInterface
+	SetChoices(choices interface{}, saveIndex ...bool) FieldInterface
 	SetText(text string) FieldInterface
 	SetData(key string, value interface{})
 	String() string
@@ -273,6 +273,7 @@ func (f *Field) RemoveTag(tag string) FieldInterface {
 // SetValue sets the value parameter for the field.
 func (f *Field) SetValue(value string) FieldInterface {
 	f.value = value
+	f.AddSelected(f.value)
 	return f
 }
 
@@ -370,13 +371,27 @@ func (f *Field) RemoveSelected(opt string) FieldInterface {
 // is the default group that is not explicitly rendered) and value is the list of choices belonging to that group.
 // Grouping is only useful for Select fields, while groups are ignored in Radio fields.
 // It has no effect if type is not SELECT.
-func (f *Field) SetChoices(choices interface{}) FieldInterface {
+func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterface {
 	switch f.fieldType {
 	case formcommon.SELECT:
-		f.choices, _ = choices.(map[string][]InputChoice)
+		ch, _ := choices.(map[string][]InputChoice)
+		f.choices = ch
+		if len(saveIndex) < 1 || saveIndex[0] {
+			for k, v := range ch {
+				for idx, ipt := range v {
+					f.choiceKeys[ipt.Id] = ChoiceIndex{Group: k, Index: idx}
+				}
+			}
+		}
 
 	case formcommon.RADIO, formcommon.CHECKBOX:
-		f.choices, _ = choices.([]InputChoice)
+		ch, _ := choices.([]InputChoice)
+		f.choices = ch
+		if len(saveIndex) < 1 || saveIndex[0] {
+			for idx, ipt := range ch {
+				f.choiceKeys[ipt.Id] = ChoiceIndex{Group: "", Index: idx}
+			}
+		}
 	}
 	return f
 }
