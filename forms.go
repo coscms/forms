@@ -67,7 +67,6 @@ func (f *Form) SetModel(m interface{}) *Form {
 	return f
 }
 
-
 func NewForm(style string, args ...string) *Form {
 	if style == "" {
 		style = formcommon.BASE
@@ -143,11 +142,20 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	fieldSetList := make(map[string]*FieldSetType, 0)
 	fieldSetSort := make(map[string]string, 0)
 	for i := 0; i < t.NumField(); i++ {
-		optionsArr := strings.Split(formcommon.Tag(t, i, "form_options"), ",")
 		options := make(map[string]struct{})
-		for _, opt := range optionsArr {
-			if opt != "" {
-				options[opt] = struct{}{}
+		tag, tagf := formcommon.Tago(t, t.Field(i), "form_options")
+		if tag != "" {
+			var optionsArr []string = make([]string, 0)
+			if tagf != nil {
+				cached := tagf.GetParsed("form_options", func() interface{} {
+					return strings.Split(formcommon.Tag(t, i, "form_options"), ";")
+				})
+				optionsArr = cached.([]string)
+			}
+			for _, opt := range optionsArr {
+				if opt != "" {
+					options[opt] = struct{}{}
+				}
 			}
 		}
 		if _, ok := options["-"]; !ok {

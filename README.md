@@ -170,7 +170,7 @@ Tags
 
 Struct tags can be used to slightly modify automatic form creation. In particular the following tags are parsed:
 
-* form_options: can contain the following keywords separated by comma
+* form_options: can contain the following keywords separated by Semicolon (;)
 	- -: skip field, do not convert to HTML field
 	- checked: for Checkbox fields, check by default
 	- multiple: for select fields, allows multiple choices
