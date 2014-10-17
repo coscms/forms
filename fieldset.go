@@ -26,9 +26,7 @@ func (f *FieldSetType) SetData(key string, value interface{}) {
 	f.AppendData[key] = value
 }
 
-func (f *FieldSetType) dataForRender() string {
-	var s string
-	buf := bytes.NewBufferString(s)
+func (f *FieldSetType) Data() map[string]interface{} {
 	data := map[string]interface{}{
 		"container": "fieldset",
 		"name":      f.name,
@@ -39,13 +37,18 @@ func (f *FieldSetType) dataForRender() string {
 	for k, v := range f.AppendData {
 		data[k] = v
 	}
+	return data
+}
+
+func (f *FieldSetType) dataForRender() string {
+	buf := bytes.NewBufferString("")
 	tpf := formcommon.TmplDir + "/" + f.tmpl + ".html"
 	tpl, ok := formcommon.CachedTemplate(tpf)
 	if !ok {
 		tpl = template.Must(template.ParseFiles(formcommon.CreateUrl(tpf)))
 		formcommon.SetCachedTemplate(tpf, tpl)
 	}
-	err := tpl.Execute(buf, data)
+	err := tpl.Execute(buf, f.Data())
 	if err != nil {
 		panic(err)
 	}

@@ -17,15 +17,14 @@ type FormElement interface {
 	Name() string
 	String() string
 	SetData(key string, value interface{})
+	Data() map[string]interface{}
 }
 
 func (f *Form) SetData(key string, value interface{}) {
 	f.AppendData[key] = value
 }
 
-func (f *Form) dataForRender() string {
-	var s string
-	buf := bytes.NewBufferString(s)
+func (f *Form) Data() map[string]interface{} {
 	data := map[string]interface{}{
 		"container": "",
 		"fields":    f.fields,
@@ -39,7 +38,12 @@ func (f *Form) dataForRender() string {
 	for k, v := range f.AppendData {
 		data[k] = v
 	}
-	err := f.template.Execute(buf, data)
+	return data
+}
+
+func (f *Form) dataForRender() string {
+	buf := bytes.NewBufferString("")
+	err := f.template.Execute(buf, f.Data())
 	if err != nil {
 		panic(err)
 	}
@@ -165,6 +169,11 @@ func (f *Form) Field(name string) fields.FieldInterface {
 		return &fields.Field{}
 	}
 	return f.fields[ind].(fields.FieldInterface)
+}
+
+// Fields returns all field
+func (f *Form) Fields() []FormElement {
+	return f.fields
 }
 
 // Field returns the field identified by name. It returns an empty field if it is missing.

@@ -62,6 +62,7 @@ type FieldInterface interface {
 	SetChoices(choices interface{}, saveIndex ...bool) FieldInterface
 	SetText(text string) FieldInterface
 	SetData(key string, value interface{})
+	Data() map[string]interface{}
 	String() string
 }
 
@@ -119,7 +120,7 @@ func (f *Field) Name() string {
 	return strings.TrimSuffix(f.name, "[]")
 }
 
-func (f *Field) dataForRender() map[string]interface{} {
+func (f *Field) Data() map[string]interface{} {
 	safeParams := make(map[template.HTMLAttr]interface{})
 	for k, v := range f.params {
 		safeParams[template.HTMLAttr(k)] = v
@@ -152,16 +153,14 @@ func (f *Field) dataForRender() map[string]interface{} {
 // Render packs all data and executes widget render method.
 func (f *Field) Render() template.HTML {
 	if f.Widget != nil {
-		data := f.dataForRender()
-		return template.HTML(f.Widget.Render(data))
+		return template.HTML(f.Widget.Render(f.Data()))
 	}
 	return template.HTML("")
 }
 
 func (f *Field) String() string {
 	if f.Widget != nil {
-		data := f.dataForRender()
-		return f.Widget.Render(data)
+		return f.Widget.Render(f.Data())
 	}
 	return ""
 }
