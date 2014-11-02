@@ -19,21 +19,6 @@ type ChoiceIndex struct {
 	Index int
 }
 
-// // Radio button type.
-// type RadioType struct {
-// 	Field
-// }
-
-// // Select field type.
-// type SelectType struct {
-// 	Field
-// }
-
-// // Checkbox field type.
-// type CheckBoxType struct {
-// 	Field
-// }
-
 // =============== RADIO
 
 // RadioField creates a default radio button input field with the provided name and list of choices.
@@ -47,7 +32,6 @@ func RadioField(name string, choices []InputChoice) *Field {
 // RadioFieldFromInstance creates and initializes a radio field based on its name, the reference object instance and field number.
 // This method looks for "form_choices" and "form_value" tags to add additional parameters to the field. "form_choices" tag is a list
 // of <id>|<value> options, joined by "|" character; ex: "A|Option A|B|Option B" translates into 2 options: <A, Option A> and <B, Option B>.
-// It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
 func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
 	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
 	chArr := make([]InputChoice, 0)
@@ -84,7 +68,6 @@ func SelectField(name string, choices map[string][]InputChoice) *Field {
 // This method looks for "form_choices" and "form_value" tags to add additional parameters to the field. "form_choices" tag is a list
 // of <group<|<id>|<value> options, joined by "|" character; ex: "G1|A|Option A|G1|B|Option B" translates into 2 options in the same group G1:
 // <A, Option A> and <B, Option B>. "" group is the default one.
-// It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
 func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
 	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
 	chArr := make(map[string][]InputChoice)
@@ -165,7 +148,6 @@ func Checkbox(name string, checked bool) *Field {
 }
 
 // CheckboxFromInstance creates and initializes a checkbox field based on its name, the reference object instance, field number and field options.
-// It uses i object's [fieldNo]-th field content (if any) to override the "checked" option in the options map and check the field.
 func CheckboxFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
 	ret := FieldWithType(name, formcommon.CHECKBOX)
 

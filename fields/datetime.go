@@ -16,21 +16,6 @@ const (
 	TIME_FORMAT     = "15:05"
 )
 
-// // DateTime type.
-// type DatetimeType struct {
-// 	Field
-// }
-
-// // Date type.
-// type DateType struct {
-// 	Field
-// }
-
-// // Time type.
-// type TimeType struct {
-// 	Field
-// }
-
 // DatetimeField creates a default datetime input field with the given name.
 func DatetimeField(name string) *Field {
 	ret := FieldWithType(name, formcommon.DATETIME)
@@ -51,7 +36,6 @@ func TimeField(name string) *Field {
 
 // DatetimeFieldFromInstance creates and initializes a datetime field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-// It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
 func DatetimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := DatetimeField(name)
 	// check tags
@@ -79,7 +63,6 @@ func DatetimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 
 // DateFieldFromInstance creates and initializes a date field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-// It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
 func DateFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := DateField(name)
 	// check tags
@@ -107,7 +90,6 @@ func DateFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name s
 
 // TimeFieldFromInstance creates and initializes a time field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-// It also uses i object's [fieldNo]-th field content (if any) to override the "form_value" option and fill the HTML field.
 func TimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := TimeField(name)
 	// check tags

@@ -8,26 +8,6 @@ import (
 	"github.com/coscms/forms/common"
 )
 
-// // Text field input type.
-// type TextFieldType struct {
-// 	Field
-// }
-
-// // Password field input type.
-// type PasswordFieldType struct {
-// 	Field
-// }
-
-// // Textarea field input type
-// type TextAreaFieldType struct {
-// 	Field
-// }
-
-// // Hidden field input type.
-// type HiddenFieldType struct {
-// 	Field
-// }
-
 // TextField creates a default text input field based on the provided name.
 func TextField(name string) *Field {
 	return FieldWithType(name, formcommon.TEXT)
@@ -56,7 +36,6 @@ func HiddenField(name string) *Field {
 }
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
-// It uses i object's [fieldNo]-th field content to set the field content.
 func TextFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := TextField(name)
 	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
@@ -64,7 +43,6 @@ func TextFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name s
 }
 
 // PasswordFieldFromInstance creates and initializes a password field based on its name, the reference object instance and field number.
-// It uses i object's [fieldNo]-th field content to set the field content.
 func PasswordFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := PasswordField(name)
 	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
@@ -73,7 +51,6 @@ func PasswordFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
 // This method looks for "form_rows" and "form_cols" tags to add additional parameters to the field.
-// It also uses i object's [fieldNo]-th field content to set the field content.
 func TextAreaFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	var rows, cols int = 20, 50
 	var err error
@@ -95,7 +72,6 @@ func TextAreaFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 }
 
 // HiddenFieldFromInstance creates and initializes a hidden field based on its name, the reference object instance and field number.
-// It uses i object's [fieldNo]-th field content to set the field content.
 func HiddenFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
 	ret := HiddenField(name)
 	ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
