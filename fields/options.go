@@ -19,6 +19,43 @@ type ChoiceIndex struct {
 	Index int
 }
 
+func defaultValue(val reflect.Value, t reflect.Type, fieldNo int) string {
+	field := val.Field(fieldNo)
+	var v string = formcommon.Tag(t, fieldNo, "form_value")
+	if v == "" {
+		v = fmt.Sprintf("%v", field.Interface())
+	} else {
+		if value := fmt.Sprintf("%v", field.Interface()); value != "" {
+			v = value
+		}
+		/*
+			switch field.Kind() {
+			case reflect.Int, reflect.Int64, reflect.Int32:
+				value := field.Int()
+				if value != 0 {
+					v = fmt.Sprintf("%v", value)
+				}
+			case reflect.Uint, reflect.Uint64, reflect.Uint32:
+				value := field.Uint()
+				if value != 0 {
+					v = fmt.Sprintf("%v", value)
+				}
+			case reflect.Float32, reflect.Float64:
+				value := field.Float()
+				if value != 0 {
+					v = fmt.Sprintf("%v", value)
+				}
+			default:
+				value := fmt.Sprintf("%v", field.Interface())
+				if value != "" {
+					v = value
+				}
+			}
+		*/
+	}
+	return v
+}
+
 // =============== RADIO
 
 // RadioField creates a default radio button input field with the provided name and list of choices.
@@ -43,10 +80,7 @@ func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name
 		chMap[choices[i]] = choices[i+1]
 	}
 	ret.SetChoices(chArr, false)
-	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
-	if v == "" {
-		v = formcommon.Tag(t, fieldNo, "form_value")
-	}
+	v := defaultValue(val, t, fieldNo)
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
@@ -84,16 +118,10 @@ func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, nam
 		chMap[id] = choices[i+2]
 	}
 	ret.SetChoices(chArr, false)
-
 	if _, ok := options["multiple"]; ok {
 		ret.MultipleChoice()
 	}
-
-	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
-	if v == "" {
-		// TODO: multiple value parsing
-		v = formcommon.Tag(t, fieldNo, "form_value")
-	}
+	v := defaultValue(val, t, fieldNo)
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
@@ -126,11 +154,7 @@ func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, n
 	if len(ret.choices.([]InputChoice)) > 1 {
 		ret.MultipleChoice()
 	}
-
-	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
-	if v == "" {
-		v = formcommon.Tag(t, fieldNo, "form_value")
-	}
+	v := defaultValue(val, t, fieldNo)
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
@@ -150,7 +174,6 @@ func Checkbox(name string, checked bool) *Field {
 // CheckboxFromInstance creates and initializes a checkbox field based on its name, the reference object instance, field number and field options.
 func CheckboxFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
 	ret := FieldWithType(name, formcommon.CHECKBOX)
-
 	if _, ok := options["checked"]; ok {
 		ret.AddTag("checked")
 	} else {
