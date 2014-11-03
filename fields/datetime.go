@@ -51,12 +51,10 @@ func DatetimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 		}
 		ret.SetParam("max", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		ret.SetValue(v.Format(DATETIME_FORMAT))
+	}else if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
-	} else {
-		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
-			ret.SetValue(v.Format(DATETIME_FORMAT))
-		}
 	}
 	return ret
 }
@@ -78,12 +76,10 @@ func DateFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name s
 		}
 		ret.SetParam("max", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		ret.SetValue(v.Format(DATE_FORMAT))
+	}else if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
-	} else {
-		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
-			ret.SetValue(v.Format(DATE_FORMAT))
-		}
 	}
 	return ret
 }
@@ -105,12 +101,10 @@ func TimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name s
 		}
 		ret.SetParam("max", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
+		ret.SetValue(v.Format(TIME_FORMAT))
+	}else if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
 		ret.SetValue(v)
-	} else {
-		if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
-			ret.SetValue(v.Format(TIME_FORMAT))
-		}
 	}
 	return ret
 }

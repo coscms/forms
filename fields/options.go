@@ -43,9 +43,9 @@ func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name
 		chMap[choices[i]] = choices[i+1]
 	}
 	ret.SetChoices(chArr, false)
-	var v string = formcommon.Tag(t, fieldNo, "form_value")
+	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
 	if v == "" {
-		v = fmt.Sprintf("%s", val.Field(fieldNo).String())
+		v = formcommon.Tag(t, fieldNo, "form_value")
 	}
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
@@ -89,7 +89,7 @@ func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, nam
 		ret.MultipleChoice()
 	}
 
-	var v string = fmt.Sprintf("%s", val.Field(fieldNo).String())
+	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
 	if v == "" {
 		// TODO: multiple value parsing
 		v = formcommon.Tag(t, fieldNo, "form_value")
@@ -127,9 +127,9 @@ func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, n
 		ret.MultipleChoice()
 	}
 
-	var v string = formcommon.Tag(t, fieldNo, "form_value")
+	var v string = fmt.Sprintf("%v", val.Field(fieldNo).Interface())
 	if v == "" {
-		v = fmt.Sprintf("%s", val.Field(fieldNo).String())
+		v = formcommon.Tag(t, fieldNo, "form_value")
 	}
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)

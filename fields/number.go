@@ -34,10 +34,10 @@ func NumberFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name
 	if v := formcommon.Tag(t, fieldNo, "form_max"); v != "" {
 		ret.SetParam("max", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if v := fmt.Sprintf("%v", val.Field(fieldNo).Interface()); v != "" {
 		ret.SetValue(v)
 	} else {
-		ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
+		ret.SetValue(formcommon.Tag(t, fieldNo, "form_value"))
 	}
 	return ret
 }
@@ -56,10 +56,10 @@ func RangeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name 
 	if v := formcommon.Tag(t, fieldNo, "form_step"); v != "" {
 		ret.SetParam("step", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if v := fmt.Sprintf("%v", val.Field(fieldNo).Interface()); v != "" {
 		ret.SetValue(v)
 	} else {
-		ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
+		ret.SetValue(formcommon.Tag(t, fieldNo, "form_value"))
 	}
 	return ret
 }

@@ -332,7 +332,7 @@ func (f *Field) AddSelected(opt ...string) FieldInterface {
 				}
 			}
 		}
-	case formcommon.CHECKBOX:
+	case formcommon.RADIO, formcommon.CHECKBOX:
 		size := len(f.choices.([]InputChoice))
 		for _, v := range opt {
 			i := f.choiceKeys[v]
@@ -356,7 +356,7 @@ func (f *Field) RemoveSelected(opt string) FieldInterface {
 			}
 		}
 
-	case formcommon.CHECKBOX:
+	case formcommon.RADIO, formcommon.CHECKBOX:
 		size := len(f.choices.([]InputChoice))
 		i := f.choiceKeys[opt]
 		if size > i.Index {
