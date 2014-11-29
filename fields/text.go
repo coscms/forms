@@ -36,14 +36,14 @@ func HiddenField(name string) *Field {
 }
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
-func TextFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func TextFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
 	ret := TextField(name)
-	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
+	ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	return ret
 }
 
 // PasswordFieldFromInstance creates and initializes a password field based on its name, the reference object instance and field number.
-func PasswordFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func PasswordFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
 	ret := PasswordField(name)
 	ret.SetValue(fmt.Sprintf("%s", val.Field(fieldNo).String()))
 	return ret
@@ -51,7 +51,7 @@ func PasswordFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
 // This method looks for "form_rows" and "form_cols" tags to add additional parameters to the field.
-func TextAreaFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func TextAreaFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
 	var rows, cols int = 20, 50
 	var err error
 	if v := formcommon.Tag(t, fieldNo, "form_rows"); v != "" {
@@ -72,7 +72,7 @@ func TextAreaFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, na
 }
 
 // HiddenFieldFromInstance creates and initializes a hidden field based on its name, the reference object instance and field number.
-func HiddenFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func HiddenFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
 	ret := HiddenField(name)
 	ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	return ret
