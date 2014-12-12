@@ -255,8 +255,8 @@ This category includes checkbox, select and radio button fields.
 Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{"A", "Option A"},
-		fields.InputChoice{"B", "Option B"},
+		fields.InputChoice{Id:"A", Val:"Option A"},
+		fields.InputChoice{Id:"B", Val:"Option B"},
 	}
 	f := fields.CheckboxField("checkbox", opts)
 	f.AddSelected("A", "B")
@@ -264,8 +264,8 @@ Checkbox field requires a name and a set of options to populate the field. The o
 Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{"A", "Option A"},
-		fields.InputChoice{"B", "Option B"},
+		fields.InputChoice{Id:"A", Val:"Option A"},
+		fields.InputChoice{Id:"B", Val:"Option B"},
 	}
 	f := fields.RadioField("radio", opts)
 
@@ -274,8 +274,8 @@ Select fields, on the other hand, allow option grouping. This can be achieved by
 	opts := map[string][]fields.InputChoice{
 		"": []fields.InputChoice{fields.InputChoice{"A", "Option A"}},
 		"group1": []fields.InputChoice{
-			fields.InputChoice{"B", "Option B"},
-			fields.InputChoice{"C", "Option C"},
+			fields.InputChoice{Id:"B", Val:"Option B"},
+			fields.InputChoice{Id:"C", Val:"Option C"},
 		}
 	}
 	f := fields.SelectField("select", opts)

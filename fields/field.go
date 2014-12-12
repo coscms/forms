@@ -373,7 +373,13 @@ func (f *Field) RemoveSelected(opt string) FieldInterface {
 func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterface {
 	switch f.fieldType {
 	case formcommon.SELECT:
-		ch, _ := choices.(map[string][]InputChoice)
+		var ch map[string][]InputChoice
+		if c, ok := choices.(map[string][]InputChoice); ok {
+			ch = c
+		}else{
+			c, _ := choices.([]InputChoice)
+			ch = map[string][]InputChoice{"":c}
+		}
 		f.choices = ch
 		if len(saveIndex) < 1 || saveIndex[0] {
 			for k, v := range ch {
