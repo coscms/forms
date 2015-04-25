@@ -221,23 +221,27 @@ func (f *Form) Sort(sortList ...string) *Form {
 		sortSlice = sortList
 	}
 	var index int
+	var endIdx int = size - 1
+
 	for _, nameIndex := range sortSlice {
 		ni := strings.Split(nameIndex, ":")
 		fieldName := ni[0]
 		if len(ni) > 1 {
 			if ni[1] == "last" {
-				index = size - 1
+				index = endIdx
 			} else if idx, err := strconv.Atoi(ni[1]); err != nil {
 				continue
 			} else {
-				index = idx
+				if idx >= 0 {
+					index = idx
+				} else {
+					index = size + idx
+				}
 			}
 		}
 		if oldIndex, ok := f.fieldMap[fieldName]; ok {
 			if oldIndex != index && size > index {
-				f.fields[oldIndex], f.fields[index] = f.fields[index], f.fields[oldIndex]
-				f.fieldMap[f.fields[index].Name()] = index
-				f.fieldMap[f.fields[oldIndex].Name()] = oldIndex
+				f.sortFields(index, oldIndex, endIdx, size)
 			}
 		}
 		index++
@@ -247,17 +251,55 @@ func (f *Form) Sort(sortList ...string) *Form {
 
 func (f *Form) Sort2Last(fieldsName ...string) *Form {
 	size := len(f.fields)
-	var index int = size - 1
+	var endIdx int = size - 1
+	var index int = endIdx
 	for n := len(fieldsName) - 1; n >= 0; n-- {
 		fieldName := fieldsName[n]
 		if oldIndex, ok := f.fieldMap[fieldName]; ok {
 			if oldIndex != index && index >= 0 {
-				f.fields[oldIndex], f.fields[index] = f.fields[index], f.fields[oldIndex]
-				f.fieldMap[f.fields[index].Name()] = index
-				f.fieldMap[f.fields[oldIndex].Name()] = oldIndex
+				f.sortFields(index, oldIndex, endIdx, size)
 			}
 		}
 		index--
 	}
 	return f
+}
+
+func (f *Form) sortFields(index, oldIndex, endIdx, size int) {
+
+	var newFields []FormElement = make([]FormElement, 0)
+	var oldFields []FormElement = make([]FormElement, size)
+	copy(oldFields, f.fields)
+	var min, max int
+	if index > oldIndex {
+		//[ ][I][ ][ ][ ][ ] I:oldIndex=1
+		//[ ][ ][ ][ ][I][ ] I:index=4
+		if oldIndex > 0 {
+			newFields = oldFields[0:oldIndex]
+		}
+		newFields = append(newFields, oldFields[oldIndex+1:index+1]...)
+		newFields = append(newFields, f.fields[oldIndex])
+		if index+1 <= endIdx {
+			newFields = append(newFields, f.fields[index+1:]...)
+		}
+		min = oldIndex
+		max = index
+	} else {
+		//[ ][ ][ ][ ][I][ ] I:oldIndex=4
+		//[ ][I][ ][ ][ ][ ] I:index=1
+		if index > 0 {
+			newFields = oldFields[0:index]
+		}
+		newFields = append(newFields, oldFields[oldIndex])
+		newFields = append(newFields, f.fields[index:oldIndex]...)
+		if oldIndex+1 <= endIdx {
+			newFields = append(newFields, f.fields[oldIndex+1:]...)
+		}
+		min = index
+		max = oldIndex
+	}
+	for i := min; i <= max; i++ {
+		f.fieldMap[newFields[i].Name()] = i
+	}
+	f.fields = newFields
 }
