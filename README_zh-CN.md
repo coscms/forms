@@ -164,13 +164,13 @@ The final form will contain fields "field0", "struct1.field1" and "struct1.field
 Tags
 ----
 
-Struct tags can be used to slightly modify automatic form creation. In particular the following tags are parsed:
+Struct tags can be used to slightly modify automatic form creation. 下面列出的这些tag会被解析:
 
-* form_options: can contain the following keywords separated by Semicolon (;)
-	- -: skip field, do not convert to HTML field
-	- checked: for Checkbox fields, check by default
-	- multiple: for select fields, allows multiple choices
-* form_widget: override custom widget with one of the following
+* form_options: 可以包含如下关键词，同时使用多个关键词时，用分号（;）隔开
+	- -: 跳过此字段, 不转为HTML表单字段
+	- checked: 针对Checkbox，默认选中
+	- multiple: 指定select为允许多选
+* form_widget: 指定表单部件类型。支持以下类型：
 	- text
 	- hidden
 	- textarea
@@ -183,22 +183,22 @@ Struct tags can be used to slightly modify automatic form creation. In particula
 	- range
 	- radio
 	- checkbox
-	- static (simple text)
-* form_fieldset: define fieldset name
-* form_sort: sort number (asc, 0 ~ total-1)
-* form_choices: defines options for select and radio input fields
-	- radio/checkbox example(format: id|value): 1|Option One|2|Option 2|3|Option 3
-	- select example(format: group|id|value): G1|A|Option A|G1|B|Option B 
-		- "" group is the default one and does not trigger a <optgroup></optgroup> rendering.
-* form_max: max value (number, range, datetime, date and time fields)
-* form_min: min value (number, range, datetime, date and time fields)
-* form_step: step value (range field)
-* form_rows: number of rows (textarea field)
-* form_cols: number of columns (textarea field)
-* form_value: input field value (used if field is empty)
-* form_label: label for input field
+	- static (简单的静态文本)
+* form_fieldset: 定义fieldset标题文字
+* form_sort: 排序编号 (按升序排列, 编号从0开始，范围为0 ~ 总数-1)
+* form_choices: select或radio输入字段的选项
+	- radio/checkbox 范例(格式: id|value): 1|选项一|2|选项二|3|选项三
+	- select 范例(格式: group|id|value): 组1|A|选项A|组1|B|选项B 
+		- "" 组名为空白时，默认将不渲染`<optgroup></optgroup>`。
+* form_max: 允许的最大值 (用于number、range、datetime、date 和 time 类型输入框)
+* form_min: 允许的最小值 (用于number、range、datetime、date 和 time 类型输入框)
+* form_step: 步进值 (用于range输入字段)
+* form_rows: 行数 (用于textarea)
+* form_cols: 列数 (用于textarea)
+* form_value: 输入字段的默认值
+* form_label: label内容
 
-The code would therefore be better like this:
+例如：
 
 	type User struct {
 		Username 	string
@@ -212,7 +212,7 @@ The code would therefore be better like this:
 	form := NewFormFromModel(u, "bootstrap3", POST, "/action.html")
 	form.Render()
 
-which translates into:
+它们最后会翻译成以下代码：
 
  	<form method="POST" action="/action.html">
 		<label>Username</label>

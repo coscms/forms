@@ -193,7 +193,7 @@ Struct tags can be used to slightly modify automatic form creation. In particula
 * form_choices: defines options for select and radio input fields
 	- radio/checkbox example(format: id|value): 1|Option One|2|Option 2|3|Option 3
 	- select example(format: group|id|value): G1|A|Option A|G1|B|Option B 
-		- "" group is the default one and does not trigger a <optgroup></optgroup> rendering.
+		- "" group is the default one and does not trigger a `<optgroup></optgroup>` rendering.
 * form_max: max value (number, range, datetime, date and time fields)
 * form_min: min value (number, range, datetime, date and time fields)
 * form_step: step value (range field)
