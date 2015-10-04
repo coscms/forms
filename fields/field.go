@@ -371,14 +371,17 @@ func (f *Field) RemoveSelected(opt string) FieldInterface {
 // Grouping is only useful for Select fields, while groups are ignored in Radio fields.
 // It has no effect if type is not SELECT.
 func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterface {
+	if choices == nil {
+		return f
+	}
 	switch f.fieldType {
 	case formcommon.SELECT:
 		var ch map[string][]InputChoice
 		if c, ok := choices.(map[string][]InputChoice); ok {
 			ch = c
-		}else{
+		} else {
 			c, _ := choices.([]InputChoice)
-			ch = map[string][]InputChoice{"":c}
+			ch = map[string][]InputChoice{"": c}
 		}
 		f.choices = ch
 		if len(saveIndex) < 1 || saveIndex[0] {

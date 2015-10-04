@@ -67,6 +67,46 @@ func (f *Form) SetModel(m interface{}) *Form {
 	return f
 }
 
+func (f *Form) GenChoicesForField(name string, lenType interface{}, fnType interface{}) *Form {
+	f.Field(name).SetChoices(f.GenChoices(lenType, fnType))
+	return f
+}
+
+func (f *Form) GenChoices(lenType interface{}, fnType interface{}) interface{} {
+	switch fnType.(type) {
+	case func(int) (string, string, bool):
+		fn := fnType.(func(int) (string, string, bool))
+		length, ok := lenType.(int)
+		if !ok {
+			return []fields.InputChoice{}
+		}
+		result := make([]fields.InputChoice, length)
+		for key, r := range result {
+			r.Id, r.Val, r.Checked = fn(key)
+			result[key] = r
+		}
+		return result
+	case func(string, int) (string, string, bool):
+		fn := fnType.(func(string, int) (string, string, bool))
+		result := make(map[string][]fields.InputChoice)
+		values, ok := lenType.(map[string]int)
+		if !ok {
+			return result
+		}
+		for group, length := range values {
+			if _, ok := result[group]; !ok {
+				result[group] = make([]fields.InputChoice, length)
+			}
+			for key, r := range result[group] {
+				r.Id, r.Val, r.Checked = fn(group, key)
+				result[group][key] = r
+			}
+		}
+		return result
+	}
+	return nil
+}
+
 func NewForm(style string, args ...string) *Form {
 	if style == "" {
 		style = formcommon.BASE
