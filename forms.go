@@ -209,6 +209,8 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 			}
 			//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
 			switch widget {
+			case "color", "email", "file", "image", "month", "search", "tel", "url", "week":
+				f = fields.TextFieldFromInstance(v, t, i, fName, widget)
 			case "text":
 				f = fields.TextFieldFromInstance(v, t, i, fName)
 			case "hidden":

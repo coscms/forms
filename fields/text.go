@@ -8,9 +8,49 @@ import (
 	"github.com/coscms/forms/common"
 )
 
+func ColorField(name string) *Field {
+	return FieldWithType(name, formcommon.COLOR)
+}
+
+func EmailField(name string) *Field {
+	return FieldWithType(name, formcommon.EMAIL)
+}
+
+func FileField(name string) *Field {
+	return FieldWithType(name, formcommon.FILE)
+}
+
+func ImageField(name string) *Field {
+	return FieldWithType(name, formcommon.IMAGE)
+}
+
+func MonthField(name string) *Field {
+	return FieldWithType(name, formcommon.MONTH)
+}
+
+func SearchField(name string) *Field {
+	return FieldWithType(name, formcommon.SEARCH)
+}
+
+func TelField(name string) *Field {
+	return FieldWithType(name, formcommon.TEL)
+}
+
+func UrlField(name string) *Field {
+	return FieldWithType(name, formcommon.URL)
+}
+
+func WeekField(name string) *Field {
+	return FieldWithType(name, formcommon.WEEK)
+}
+
 // TextField creates a default text input field based on the provided name.
-func TextField(name string) *Field {
-	return FieldWithType(name, formcommon.TEXT)
+func TextField(name string, typ ...string) *Field {
+	var t = formcommon.TEXT
+	if len(typ) > 0 {
+		t = typ[0]
+	}
+	return FieldWithType(name, t)
 }
 
 // PasswordField creates a default password text input field based on the provided name.
@@ -36,8 +76,8 @@ func HiddenField(name string) *Field {
 }
 
 // TextFieldFromInstance creates and initializes a text field based on its name, the reference object instance and field number.
-func TextFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
-	ret := TextField(name)
+func TextFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, typ ...string) *Field {
+	ret := TextField(name, typ...)
 	ret.SetValue(fmt.Sprintf("%v", val.Field(fieldNo).Interface()))
 	return ret
 }
