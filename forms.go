@@ -13,7 +13,7 @@ import (
 
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/fields"
-	"github.com/coscms/xweb/validation"
+	"github.com/coscms/webx/lib/validation"
 )
 
 // Form methods: POST or GET.
