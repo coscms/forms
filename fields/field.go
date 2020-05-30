@@ -1,50 +1,78 @@
-// This package provides all the input fields logic and customization methods.
+/*
+
+   Copyright 2016-present Wenhui Shen <www.webx.top>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+*/
+
+//Package fields This package provides all the input fields logic and customization methods.
 package fields
 
 import (
-	"github.com/coscms/forms/common"
-	"github.com/coscms/forms/widgets"
+	"fmt"
 	"html/template"
+	"strconv"
 	"strings"
+
+	"github.com/coscms/forms/common"
+	. "github.com/coscms/forms/config"
+	"github.com/coscms/forms/widgets"
 )
 
 // Field is a generic type containing all data associated to an input field.
 type Field struct {
-	fieldType      string
-	tmpl           string
-	Widget         widgets.WidgetInterface // Public Widget field for widget customization
-	name           string
-	class          []string
-	id             string
-	params         map[string]interface{}
-	css            map[string]string
-	label          string
-	labelClass     []string
-	tag            map[string]struct{}
-	value          string
-	helptext       string
-	errors         []string
-	additionalData map[string]interface{}
-	choices        interface{}
-	choiceKeys     map[string]ChoiceIndex
-	AppendData     map[string]interface{}
-	tmplStyle      string
+	Type       string
+	Tmpl       string
+	Widget     widgets.WidgetInterface // Public Widget field for widget customization
+	CurrName   string
+	OrigName   string
+	Class      []string
+	ID         string
+	Params     map[string]interface{}
+	CSS        map[string]string
+	Label      string
+	LabelClass []string
+	Tag        map[string]struct{}
+	Value      string
+	Helptext   string
+	Errors     []string
+	Additional map[string]interface{}
+	Choices    interface{}
+	ChoiceKeys map[string]ChoiceIndex
+	AppendData map[string]interface{}
+	TmplStyle  string
+	Format     string
+	Language   string
+	data       map[string]interface{}
 }
 
 // FieldInterface defines the interface an object must implement to be used in a form. Every method returns a FieldInterface object
 // to allow methods chaining.
 type FieldInterface interface {
 	Name() string
+	OriginalName() string
+	SetName(string)
 	Render() template.HTML
 	AddClass(class string) FieldInterface
 	RemoveClass(class string) FieldInterface
 	AddTag(class string) FieldInterface
 	RemoveTag(class string) FieldInterface
-	SetId(id string) FieldInterface
+	SetID(id string) FieldInterface
 	SetParam(key string, value interface{}) FieldInterface
 	DeleteParam(key string) FieldInterface
-	AddCss(key, value string) FieldInterface
-	RemoveCss(key string) FieldInterface
+	AddCSS(key, value string) FieldInterface
+	RemoveCSS(key string) FieldInterface
 	SetStyle(style string) FieldInterface
 	SetLabel(label string) FieldInterface
 	AddLabelClass(class string) FieldInterface
@@ -58,56 +86,85 @@ type FieldInterface interface {
 	MultipleChoice() FieldInterface
 	SingleChoice() FieldInterface
 	AddSelected(opt ...string) FieldInterface
+	SetSelected(opt ...string) FieldInterface
 	RemoveSelected(opt string) FieldInterface
+	AddChoice(key, value interface{}, checked ...bool) FieldInterface
 	SetChoices(choices interface{}, saveIndex ...bool) FieldInterface
 	SetText(text string) FieldInterface
 	SetData(key string, value interface{})
 	Data() map[string]interface{}
 	String() string
+	SetLang(lang string)
+	Lang() string
+	Clone() FormElement
+
+	Element() *Element
 }
 
 // FieldWithType creates an empty field of the given type and identified by name.
 func FieldWithType(name, t string) *Field {
 	return &Field{
-		fieldType:      t,
-		Widget:         nil,
-		name:           name,
-		class:          []string{},
-		id:             "",
-		params:         map[string]interface{}{},
-		css:            map[string]string{},
-		label:          "",
-		labelClass:     []string{},
-		tag:            map[string]struct{}{},
-		value:          "",
-		helptext:       "",
-		errors:         []string{},
-		additionalData: map[string]interface{}{},
-		choices:        nil,
-		choiceKeys:     map[string]ChoiceIndex{},
-		AppendData:     map[string]interface{}{},
-		tmplStyle:      "",
+		Type:       t,
+		Widget:     nil,
+		CurrName:   name,
+		OrigName:   name,
+		Class:      []string{},
+		ID:         "",
+		Params:     map[string]interface{}{},
+		CSS:        map[string]string{},
+		Label:      "",
+		LabelClass: []string{},
+		Tag:        map[string]struct{}{},
+		Value:      "",
+		Helptext:   "",
+		Errors:     []string{},
+		Additional: map[string]interface{}{},
+		Choices:    nil,
+		ChoiceKeys: map[string]ChoiceIndex{},
+		AppendData: map[string]interface{}{},
+		TmplStyle:  "",
 	}
 }
 
 func (f *Field) SetTmpl(tmpl string, style ...string) FieldInterface {
-	f.tmpl = tmpl
-	if f.tmpl != "" && f.Widget != nil {
+	f.Tmpl = tmpl
+	if len(f.Tmpl) > 0 && f.Widget != nil && f.Tmpl != tmpl {
 		var s string
 		if len(style) > 0 {
 			s = style[0]
 		} else {
-			s = f.tmplStyle
+			s = f.TmplStyle
 		}
-		f.Widget = widgets.BaseWidget(s, f.fieldType, f.tmpl)
+		f.Widget = widgets.BaseWidget(s, f.Type, f.Tmpl)
 	}
 	return f
 }
 
+func (f *Field) SetName(name string) {
+	f.CurrName = name
+}
+
+func (f *Field) OriginalName() string {
+	return f.OrigName
+}
+
+func (f *Field) Clone() FormElement {
+	fc := *f
+	return &fc
+}
+
+func (f *Field) SetLang(lang string) {
+	f.Language = lang
+}
+
+func (f *Field) Lang() string {
+	return f.Language
+}
+
 // SetStyle sets the style (e.g.: BASE, BOOTSTRAP) of the field, correctly populating the Widget field.
 func (f *Field) SetStyle(style string) FieldInterface {
-	f.tmplStyle = style
-	f.Widget = widgets.BaseWidget(style, f.fieldType, f.tmpl)
+	f.TmplStyle = style
+	f.Widget = widgets.BaseWidget(style, f.Type, f.Tmpl)
 	return f
 }
 
@@ -117,37 +174,40 @@ func (f *Field) SetData(key string, value interface{}) {
 
 // Name returns the name of the field.
 func (f *Field) Name() string {
-	return strings.TrimSuffix(f.name, "[]")
+	return strings.TrimSuffix(f.CurrName, "[]")
 }
 
 func (f *Field) Data() map[string]interface{} {
+	if len(f.data) > 0 {
+		return f.data
+	}
 	safeParams := make(map[template.HTMLAttr]interface{})
-	for k, v := range f.params {
+	for k, v := range f.Params {
 		safeParams[template.HTMLAttr(k)] = v
 	}
-	data := map[string]interface{}{
-		"classes":      f.class,
-		"id":           f.id,
-		"name":         f.name,
+	f.data = map[string]interface{}{
+		"classes":      f.Class,
+		"id":           f.ID,
+		"name":         f.CurrName,
 		"params":       safeParams,
-		"css":          f.css,
-		"type":         f.fieldType,
-		"label":        f.label,
-		"labelClasses": f.labelClass,
-		"tags":         f.tag,
-		"value":        f.value,
-		"helptext":     f.helptext,
-		"errors":       f.errors,
+		"css":          f.CSS,
+		"type":         f.Type,
+		"label":        f.Label,
+		"labelClasses": f.LabelClass,
+		"tags":         f.Tag,
+		"value":        f.Value,
+		"helptext":     f.Helptext,
+		"errors":       f.Errors,
 		"container":    "form",
-		"choices":      f.choices,
+		"choices":      f.Choices,
 	}
-	for k, v := range f.additionalData {
-		data[k] = v
+	for k, v := range f.Additional {
+		f.data[k] = v
 	}
 	for k, v := range f.AppendData {
-		data[k] = v
+		f.data[k] = v
 	}
-	return data
+	return f.data
 }
 
 // Render packs all data and executes widget render method.
@@ -167,14 +227,14 @@ func (f *Field) String() string {
 
 // AddClass adds a class to the field.
 func (f *Field) AddClass(class string) FieldInterface {
-	f.class = append(f.class, class)
+	f.Class = append(f.Class, class)
 	return f
 }
 
 // RemoveClass removes a class from the field, if it was present.
 func (f *Field) RemoveClass(class string) FieldInterface {
 	ind := -1
-	for i, v := range f.class {
+	for i, v := range f.Class {
 		if v == class {
 			ind = i
 			break
@@ -182,33 +242,33 @@ func (f *Field) RemoveClass(class string) FieldInterface {
 	}
 
 	if ind != -1 {
-		f.class = append(f.class[:ind], f.class[ind+1:]...)
+		f.Class = append(f.Class[:ind], f.Class[ind+1:]...)
 	}
 	return f
 }
 
-// SetId associates the given id to the field, overwriting any previous id.
-func (f *Field) SetId(id string) FieldInterface {
-	f.id = id
+// SetID associates the given id to the field, overwriting any previous id.
+func (f *Field) SetID(id string) FieldInterface {
+	f.ID = id
 	return f
 }
 
 // SetLabel saves the label to be rendered along with the field.
 func (f *Field) SetLabel(label string) FieldInterface {
-	f.label = label
+	f.Label = label
 	return f
 }
 
-// SetLablClass allows to define custom classes for the label.
+// AddLabelClass allows to define custom classes for the label.
 func (f *Field) AddLabelClass(class string) FieldInterface {
-	f.labelClass = append(f.labelClass, class)
+	f.LabelClass = append(f.LabelClass, class)
 	return f
 }
 
 // RemoveLabelClass removes the given class from the field label.
 func (f *Field) RemoveLabelClass(class string) FieldInterface {
 	ind := -1
-	for i, v := range f.labelClass {
+	for i, v := range f.LabelClass {
 		if v == class {
 			ind = i
 			break
@@ -216,32 +276,37 @@ func (f *Field) RemoveLabelClass(class string) FieldInterface {
 	}
 
 	if ind != -1 {
-		f.labelClass = append(f.labelClass[:ind], f.labelClass[ind+1:]...)
+		f.LabelClass = append(f.LabelClass[:ind], f.LabelClass[ind+1:]...)
 	}
 	return f
 }
 
 // SetParam adds a parameter (defined as key-value pair) in the field.
 func (f *Field) SetParam(key string, value interface{}) FieldInterface {
-	f.params[key] = value
+	switch key {
+	case `class`:
+		f.AddClass(value.(string))
+	default:
+		f.Params[key] = value
+	}
 	return f
 }
 
 // DeleteParam removes a parameter identified by key from the field.
 func (f *Field) DeleteParam(key string) FieldInterface {
-	delete(f.params, key)
+	delete(f.Params, key)
 	return f
 }
 
-// AddCss adds a custom CSS style the field.
-func (f *Field) AddCss(key, value string) FieldInterface {
-	f.css[key] = value
+// AddCSS adds a custom CSS style the field.
+func (f *Field) AddCSS(key, value string) FieldInterface {
+	f.CSS[key] = value
 	return f
 }
 
-// RemoveCss removes CSS options identified by key from the field.
-func (f *Field) RemoveCss(key string) FieldInterface {
-	delete(f.css, key)
+// RemoveCSS removes CSS options identified by key from the field.
+func (f *Field) RemoveCSS(key string) FieldInterface {
+	delete(f.CSS, key)
 	return f
 }
 
@@ -259,46 +324,46 @@ func (f *Field) Enabled() FieldInterface {
 
 // AddTag adds a no-value parameter (e.g.: checked, disabled) to the field.
 func (f *Field) AddTag(tag string) FieldInterface {
-	f.tag[tag] = struct{}{}
+	f.Tag[tag] = struct{}{}
 	return f
 }
 
 // RemoveTag removes a no-value parameter from the field.
 func (f *Field) RemoveTag(tag string) FieldInterface {
-	delete(f.tag, tag)
+	delete(f.Tag, tag)
 	return f
 }
 
 // SetValue sets the value parameter for the field.
 func (f *Field) SetValue(value string) FieldInterface {
-	f.value = value
-	f.AddSelected(f.value)
+	f.Value = value
+	f.SetSelected(f.Value)
 	return f
 }
 
 // SetHelptext saves the field helptext.
 func (f *Field) SetHelptext(text string) FieldInterface {
-	f.helptext = text
+	f.Helptext = text
 	return f
 }
 
 // AddError adds an error string to the field. It's valid only for Bootstrap forms.
 func (f *Field) AddError(err string) FieldInterface {
-	f.errors = append(f.errors, err)
+	f.Errors = append(f.Errors, err)
 	return f
 }
 
 // MultipleChoice configures the SelectField to accept and display multiple choices.
 // It has no effect if type is not SELECT.
 func (f *Field) MultipleChoice() FieldInterface {
-	switch f.fieldType {
-	case formcommon.SELECT:
+	switch f.Type {
+	case common.SELECT:
 		f.AddTag("multiple")
 		fallthrough
-	case formcommon.CHECKBOX:
+	case common.CHECKBOX:
 		// fix name if necessary
-		if !strings.HasSuffix(f.name, "[]") {
-			f.name = f.name + "[]"
+		if !strings.HasSuffix(f.CurrName, "[]") {
+			f.CurrName = f.CurrName + "[]"
 		}
 	}
 	return f
@@ -307,60 +372,153 @@ func (f *Field) MultipleChoice() FieldInterface {
 // SingleChoice configures the Field to accept and display only one choice (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) SingleChoice() FieldInterface {
-	switch f.fieldType {
-	case formcommon.SELECT:
+	switch f.Type {
+	case common.SELECT:
 		f.RemoveTag("multiple")
 		fallthrough
-	case formcommon.CHECKBOX:
-		if strings.HasSuffix(f.name, "[]") {
-			f.name = strings.TrimSuffix(f.name, "[]")
+	case common.CHECKBOX:
+		if strings.HasSuffix(f.CurrName, "[]") {
+			f.CurrName = strings.TrimSuffix(f.CurrName, "[]")
 		}
 	}
 	return f
 }
 
-// If the field is configured as "multiple", AddSelected adds a selected value to the field (valid for SelectFields only).
+// AddSelected If the field is configured as "multiple", AddSelected adds a selected value to the field (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) AddSelected(opt ...string) FieldInterface {
-	switch f.fieldType {
-	case formcommon.SELECT:
+	switch f.Type {
+	case common.SELECT:
 		for _, v := range opt {
-			i := f.choiceKeys[v]
-			if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
+			i, ok := f.ChoiceKeys[v]
+			if !ok {
+				continue
+			}
+			choice := f.Choices.(map[string][]InputChoice)
+			if vc, ok := choice[i.Group]; ok {
 				if len(vc) > i.Index {
-					f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = true
+					choice[i.Group][i.Index].Checked = true
 				}
 			}
 		}
-	case formcommon.RADIO, formcommon.CHECKBOX:
-		size := len(f.choices.([]InputChoice))
+	case common.RADIO, common.CHECKBOX:
+		choice := f.Choices.([]InputChoice)
+		size := len(choice)
 		for _, v := range opt {
-			i := f.choiceKeys[v]
+			i, ok := f.ChoiceKeys[v]
+			if !ok {
+				continue
+			}
 			if size > i.Index {
-				f.choices.([]InputChoice)[i.Index].Checked = true
+				choice[i.Index].Checked = true
 			}
 		}
 	}
 	return f
 }
 
-// If the field is configured as "multiple", AddSelected removes the selected value from the field (valid for SelectFields only).
+func (f *Field) SetSelected(opt ...string) FieldInterface {
+	switch f.Type {
+	case common.SELECT:
+		choice := f.Choices.(map[string][]InputChoice)
+		for key, i := range f.ChoiceKeys {
+			vc, ok := choice[i.Group]
+			if !ok || len(vc) <= i.Index {
+				continue
+			}
+			checked := false
+			for _, v := range opt {
+				if key == v {
+					checked = true
+					break
+				}
+			}
+			choice[i.Group][i.Index].Checked = checked
+		}
+	case common.RADIO, common.CHECKBOX:
+		choice := f.Choices.([]InputChoice)
+		size := len(choice)
+		for key, i := range f.ChoiceKeys {
+			if size <= i.Index {
+				continue
+			}
+			checked := false
+			for _, v := range opt {
+				if key == v {
+					checked = true
+					break
+				}
+			}
+			choice[i.Index].Checked = checked
+		}
+	}
+	return f
+}
+
+//RemoveSelected If the field is configured as "multiple", AddSelected removes the selected value from the field (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) RemoveSelected(opt string) FieldInterface {
-	switch f.fieldType {
-	case formcommon.SELECT:
-		i := f.choiceKeys[opt]
-		if vc, ok := f.choices.(map[string][]InputChoice)[i.Group]; ok {
+	switch f.Type {
+	case common.SELECT:
+		i := f.ChoiceKeys[opt]
+		if vc, ok := f.Choices.(map[string][]InputChoice)[i.Group]; ok {
 			if len(vc) > i.Index {
-				f.choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = false
+				f.Choices.(map[string][]InputChoice)[i.Group][i.Index].Checked = false
 			}
 		}
 
-	case formcommon.RADIO, formcommon.CHECKBOX:
-		size := len(f.choices.([]InputChoice))
-		i := f.choiceKeys[opt]
+	case common.RADIO, common.CHECKBOX:
+		size := len(f.Choices.([]InputChoice))
+		i := f.ChoiceKeys[opt]
 		if size > i.Index {
-			f.choices.([]InputChoice)[i.Index].Checked = false
+			f.Choices.([]InputChoice)[i.Index].Checked = false
+		}
+	}
+	return f
+}
+
+func (f *Field) AddChoice(key, value interface{}, checked ...bool) FieldInterface {
+	var _checked bool
+	if len(checked) > 0 && checked[0] {
+		_checked = true
+	}
+	switch f.Type {
+	case common.SELECT:
+		if f.Choices == nil {
+			f.Choices = map[string][]InputChoice{
+				"": []InputChoice{
+					{
+						ID:      fmt.Sprint(key),
+						Val:     fmt.Sprint(value),
+						Checked: _checked,
+					},
+				},
+			}
+		} else {
+			v, _ := f.Choices.(map[string][]InputChoice)
+			v[""] = append(v[""], InputChoice{
+				ID:      fmt.Sprint(key),
+				Val:     fmt.Sprint(value),
+				Checked: _checked,
+			})
+		}
+
+	case common.RADIO, common.CHECKBOX:
+		if f.Choices == nil {
+			f.Choices = []InputChoice{
+				{
+					ID:      fmt.Sprint(key),
+					Val:     fmt.Sprint(value),
+					Checked: _checked,
+				},
+			}
+		} else {
+			v, _ := f.Choices.([]InputChoice)
+			v = append(v, InputChoice{
+				ID:      fmt.Sprint(key),
+				Val:     fmt.Sprint(value),
+				Checked: _checked,
+			})
 		}
 	}
 	return f
@@ -374,30 +532,64 @@ func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterfac
 	if choices == nil {
 		return f
 	}
-	switch f.fieldType {
-	case formcommon.SELECT:
+	switch f.Type {
+	case common.SELECT:
 		var ch map[string][]InputChoice
 		if c, ok := choices.(map[string][]InputChoice); ok {
 			ch = c
 		} else {
-			c, _ := choices.([]InputChoice)
+			c, y := choices.([]InputChoice)
+			if !y {
+				if v, y := choices.([]string); y {
+					c = []InputChoice{
+						InputChoice{},
+					}
+					switch len(v) {
+					case 3:
+						c[0].Checked, _ = strconv.ParseBool(v[2])
+						fallthrough
+					case 2:
+						c[0].Val = v[1]
+						fallthrough
+					case 1:
+						c[0].ID = v[0]
+					}
+				}
+			}
 			ch = map[string][]InputChoice{"": c}
 		}
-		f.choices = ch
+		f.Choices = ch
 		if len(saveIndex) < 1 || saveIndex[0] {
 			for k, v := range ch {
 				for idx, ipt := range v {
-					f.choiceKeys[ipt.Id] = ChoiceIndex{Group: k, Index: idx}
+					f.ChoiceKeys[ipt.ID] = ChoiceIndex{Group: k, Index: idx}
 				}
 			}
 		}
 
-	case formcommon.RADIO, formcommon.CHECKBOX:
-		ch, _ := choices.([]InputChoice)
-		f.choices = ch
+	case common.RADIO, common.CHECKBOX:
+		c, y := choices.([]InputChoice)
+		if !y {
+			if v, y := choices.([]string); y {
+				c = []InputChoice{
+					InputChoice{},
+				}
+				switch len(v) {
+				case 3:
+					c[0].Checked, _ = strconv.ParseBool(v[2])
+					fallthrough
+				case 2:
+					c[0].Val = v[1]
+					fallthrough
+				case 1:
+					c[0].ID = v[0]
+				}
+			}
+		}
+		f.Choices = c
 		if len(saveIndex) < 1 || saveIndex[0] {
-			for idx, ipt := range ch {
-				f.choiceKeys[ipt.Id] = ChoiceIndex{Group: "", Index: idx}
+			for idx, ipt := range c {
+				f.ChoiceKeys[ipt.ID] = ChoiceIndex{Group: "", Index: idx}
 			}
 		}
 	}
@@ -406,12 +598,77 @@ func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterfac
 
 // SetText saves the provided text as content of the field, usually a TextAreaField.
 func (f *Field) SetText(text string) FieldInterface {
-	if f.fieldType == formcommon.BUTTON ||
-		f.fieldType == formcommon.SUBMIT ||
-		f.fieldType == formcommon.RESET ||
-		f.fieldType == formcommon.STATIC ||
-		f.fieldType == formcommon.TEXTAREA {
-		f.additionalData["text"] = text
+	if f.Type == common.BUTTON ||
+		f.Type == common.SUBMIT ||
+		f.Type == common.RESET ||
+		f.Type == common.STATIC ||
+		f.Type == common.TEXTAREA {
+		f.Additional["text"] = text
 	}
 	return f
+}
+
+func (f *Field) Element() *Element {
+	elem := &Element{
+		ID:         f.ID,
+		Type:       f.Type,
+		Name:       f.CurrName,
+		Label:      f.Label,
+		Value:      f.Value,
+		HelpText:   f.Helptext,
+		Template:   f.Tmpl,
+		Valid:      ``,
+		Attributes: make([][]string, 0),
+		Choices:    make([]*Choice, 0),
+		Elements:   make([]*Element, 0),
+		Format:     f.Format,
+	}
+	var (
+		temp string
+		join string
+	)
+	for _, c := range f.Class {
+		temp += join + c
+		join = ` `
+	}
+	if temp != `` {
+		elem.Attributes = append(elem.Attributes, []string{`class`, temp})
+		temp = ``
+		join = ``
+	}
+	for c := range f.Tag {
+		elem.Attributes = append(elem.Attributes, []string{c})
+	}
+	for c, v := range f.Params {
+		elem.Attributes = append(elem.Attributes, []string{c, fmt.Sprintf(`%v`, v)})
+	}
+	for _, c := range f.CSS {
+		temp += join + c
+		join = `;`
+	}
+	if temp != `` {
+		elem.Attributes = append(elem.Attributes, []string{`style`, temp})
+		temp = ``
+		join = ``
+	}
+	if choices, ok := f.Choices.(map[string][]InputChoice); ok {
+		for k, items := range choices {
+			for _, v := range items {
+				elem.Choices = append(elem.Choices, &Choice{
+					Group:   k,
+					Option:  []string{v.ID, v.Val},
+					Checked: v.Checked,
+				})
+			}
+		}
+	} else if choices, ok := f.Choices.([]InputChoice); ok {
+		for _, v := range choices {
+			elem.Choices = append(elem.Choices, &Choice{
+				Group:   ``,
+				Option:  []string{v.ID, v.Val},
+				Checked: v.Checked,
+			})
+		}
+	}
+	return elem
 }

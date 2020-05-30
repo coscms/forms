@@ -1,19 +1,42 @@
-// This package provides form creation and rendering functionalities, as well as FieldSet definition.
+/*
+
+   Copyright 2016-present Wenhui Shen <www.webx.top>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+*/
+
+// Package forms This package provides form creation and rendering functionalities, as well as FieldSet definition.
 // Two kind of forms can be created: base forms and Bootstrap3 compatible forms; even though the latters are automatically provided
 // the required classes to make them render correctly in a Bootstrap environment, every form can be given custom parameters such as
 // classes, id, generic parameters (in key-value form) and stylesheet options.
 package forms
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 	"net/url"
+	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 
+	"github.com/webx-top/validation"
 	"github.com/coscms/forms/common"
+	conf "github.com/coscms/forms/config"
 	"github.com/coscms/forms/fields"
-	"github.com/coscms/webx/lib/validation"
 )
 
 // Form methods: POST or GET.
@@ -22,48 +45,294 @@ const (
 	GET  = "GET"
 )
 
+func NewWithConfig(c *conf.Config, args ...interface{}) *Form {
+	form := New()
+	form.Init(c, args...)
+	return form
+}
+
+func New() *Form {
+	return &Form{
+		FieldList:             make([]conf.FormElement, 0),
+		FieldMap:              make(map[string]int),
+		ContainerMap:          make(map[string]string),
+		Style:                 common.BASE,
+		Class:                 []string{},
+		ID:                    "",
+		Params:                map[string]string{},
+		CSS:                   map[string]string{},
+		Method:                POST,
+		AppendData:            map[string]interface{}{},
+		labelFn:               func(s string) string { return s },
+		validTagFn:            Html5Validate,
+		beforeRender:          []func(){},
+		OmitOrMustFieldsValue: map[string]bool{},
+	}
+}
+
+func NewFromModel(m interface{}, c *conf.Config) *Form {
+	form := NewWithConfig(c, m)
+	form.SetModel(m)
+	form.ParseModel(m)
+	return form
+}
+
 // Form structure.
 type Form struct {
-	fields       []FormElement
-	fieldMap     map[string]int
-	containerMap map[string]string
-	style        string
-	template     *template.Template
-	class        []string
-	id           string
-	params       map[string]string
-	css          map[string]string
-	method       string
-	action       template.HTML
-	AppendData   map[string]interface{}
-	valid        *validation.Validation
-	model        interface{}
+	AppendData  map[string]interface{}
+	Model       interface{}
+	IngoreValid []string
+
+	FieldList             []conf.FormElement
+	FieldMap              map[string]int
+	ContainerMap          map[string]string
+	Style                 string
+	template              *template.Template
+	Class                 []string
+	ID                    string
+	Params                map[string]string
+	CSS                   map[string]string
+	Method                string
+	Action                template.HTML
+	valid                 *validation.Validation
+	labelFn               func(string) string
+	validTagFn            func(string, fields.FieldInterface)
+	config                *conf.Config
+	beforeRender          []func()
+	debug                 bool
+	OmitOrMustFieldsValue map[string]bool //true:omit; false:must
+	OmitAllFieldsValue    bool
+	data                  map[string]interface{}
+}
+
+func (f *Form) Debug(args ...bool) *Form {
+	if len(args) > 0 {
+		f.debug = args[0]
+	} else {
+		f.debug = true
+	}
+
+	return f
+}
+
+func (f *Form) IsDebug() bool {
+	return f.debug
+}
+
+// Must 使用结构体实例中某些字段的值（和OmitAll配合起来使用）
+func (f *Form) Must(fields ...string) *Form {
+	for _, field := range fields {
+		f.OmitOrMustFieldsValue[field] = true
+	}
+	return f
+}
+
+func (f *Form) ResetOmitOrMust() *Form {
+	f.OmitOrMustFieldsValue = map[string]bool{}
+	return f
+}
+
+// Omit 忽略结构体实例中某些字段的值
+func (f *Form) Omit(fields ...string) *Form {
+	for _, field := range fields {
+		f.OmitOrMustFieldsValue[field] = false
+	}
+	return f
+}
+
+// OmitAll 忽略结构体实例中所有字段的值
+func (f *Form) OmitAll(on ...bool) *Form {
+	if len(on) > 0 {
+		f.OmitAllFieldsValue = on[0]
+	} else {
+		f.OmitAllFieldsValue = true
+	}
+	return f
+}
+
+// IsOmit 是否忽略结构体实例中指定字段的值
+func (f *Form) IsOmit(fieldName string) (omitFieldValue bool) {
+	if f.OmitAllFieldsValue {
+		//默认为忽略，设置为不忽略时才不忽略
+		omit, ok := f.OmitOrMustFieldsValue[fieldName]
+		if !ok || omit {
+			omitFieldValue = true
+		}
+	} else {
+		//设置为忽略时，才忽略
+		omit, ok := f.OmitOrMustFieldsValue[fieldName]
+		if ok && omit {
+			omitFieldValue = true
+		}
+	}
+	return
+}
+
+func (f *Form) SetLabelFunc(fn func(string) string) *Form {
+	f.labelFn = fn
+	return f
+}
+
+func (f *Form) SetValidTagFunc(fn func(string, fields.FieldInterface)) *Form {
+	f.validTagFn = fn
+	return f
+}
+
+func (f *Form) LabelFunc() func(string) string {
+	return f.labelFn
+}
+
+func (f *Form) ValidTagFunc() func(string, fields.FieldInterface) {
+	return f.validTagFn
+}
+
+func (f *Form) Init(c *conf.Config, args ...interface{}) *Form {
+	if c == nil {
+		c = &conf.Config{}
+	}
+	f.config = c
+	if len(c.Theme) == 0 {
+		c.Theme = common.BASE
+	}
+
+	f.Style = c.Theme
+
+	if len(c.Template) == 0 {
+		c.Template = common.TmplDir(f.Style) + `/baseform.html`
+		//c.Template=common.TmplDir(f.Style) + `/allfields.html`
+	}
+	tpf, err := filepath.Abs(c.Template)
+	if err != nil {
+		log.Println(err)
+	}
+
+	tmpl, ok := common.CachedTemplate(tpf)
+	if !ok {
+		tmpl, err = common.ParseFiles(common.CreateUrl(c.Template))
+		if err != nil {
+			log.Println(err)
+		}
+		common.SetCachedTemplate(tpf, tmpl)
+	}
+
+	f.template = tmpl
+	f.Method = c.Method
+	f.Action = template.HTML(c.Action)
+	if len(args) > 0 {
+		f.Model = args[0]
+	}
+	return f
 }
 
 func (f *Form) Valid(args ...string) (valid *validation.Validation, passed bool) {
-	if f.valid == nil {
-		f.valid = &validation.Validation{}
-	}
-	valid = f.valid
-	if f.model == nil {
+	valid = f.Validate()
+	if f.Model == nil {
 		return
 	}
 	var err error
-	passed, err = valid.Valid(f.model, args...)
+	passed, err = valid.Valid(f.Model, args...)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	if !passed { // validation does not pass
 		for field, err := range valid.ErrorsMap {
-			f.Field(field).AddError(formcommon.LabelFn(err.Message))
+			f.Field(field).AddError(f.labelFn(err.Message))
 		}
 	}
 	return
 }
 
+func (f *Form) InsertErrors() *Form {
+	if f.valid != nil && f.valid.HasError() {
+		for _, err := range f.valid.Errors {
+			f.Field(err.Field).AddError(f.labelFn(err.Message))
+		}
+	}
+	return f
+}
+
+func (f *Form) Error() (err *validation.ValidationError) {
+	if f.valid != nil && f.valid.HasError() {
+		err = f.valid.Errors[0]
+	}
+	return
+}
+
+func (f *Form) Errors() (errs []*validation.ValidationError) {
+	if f.valid != nil && f.valid.HasError() {
+		errs = f.valid.Errors
+	}
+	return
+}
+
+func (f *Form) HasError() bool {
+	return f.valid != nil && f.valid.HasError()
+}
+
+func (f *Form) HasErrors() bool {
+	return f.valid != nil && f.valid.HasErrors()
+}
+
+func (f *Form) AddBeforeRender(fn func()) *Form {
+	if fn == nil {
+		return f
+	}
+	f.beforeRender = append(f.beforeRender, fn)
+	return f
+}
+
+func (f *Form) Validate() *validation.Validation {
+	if f.valid == nil {
+		f.valid = &validation.Validation{}
+	}
+	return f.valid
+}
+
 func (f *Form) SetModel(m interface{}) *Form {
-	f.model = m
+	f.Model = m
+	return f
+}
+
+func (f *Form) ParseModel(args ...interface{}) *Form {
+	var m interface{}
+	if len(args) > 0 {
+		m = args[0]
+	}
+	if m == nil {
+		m = f.Model
+	}
+	flist, fsort := f.unWindStructure(m, ``)
+	for _, v := range flist {
+		f.Elements(v.(conf.FormElement))
+	}
+	if fsort != "" {
+		f.Sort(fsort)
+	}
+	return f
+}
+
+func (f *Form) AddButton(tmpl string, args ...string) *Form {
+	btnFields := make([]fields.FieldInterface, 0)
+	if len(args) < 1 {
+		btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")))
+		btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")))
+	} else {
+		for _, field := range args {
+			switch field {
+			case `submit`:
+				btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")))
+			case `reset`:
+				btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")))
+			default:
+				btnFields = append(btnFields, fields.Button(field, f.labelFn(strings.ToTitle(field))))
+			}
+		}
+	}
+	if tmpl == `` {
+		tmpl = `fieldset_buttons`
+	}
+	f.Elements(f.NewFieldSet("_button_group", "", btnFields...).SetTmpl(tmpl))
 	return f
 }
 
@@ -72,187 +341,110 @@ func (f *Form) GenChoicesForField(name string, lenType interface{}, fnType inter
 	return f
 }
 
+// GenChoices generate choices
+// type Data struct{
+// 	ID string
+// 	Name string
+// }
+// data:=[]*Data{
+// 	&Data{ID:"a",Name:"One"},
+// 	&Data{ID:"b",Name:"Two"},
+// }
+// GenChoices(len(data), func(index int) (string, string, bool){
+// 	return data[index].ID,data[index].Name,false
+// })
+// or
+// GenChoices(map[string]int{
+// 	"":len(data),
+// }, func(group string,index int) (string, string, bool){
+// 	return data[index].ID,data[index].Name,false
+// })
 func (f *Form) GenChoices(lenType interface{}, fnType interface{}) interface{} {
-	switch fnType.(type) {
-	case func(int) (string, string, bool):
-		fn := fnType.(func(int) (string, string, bool))
-		length, ok := lenType.(int)
-		if !ok {
-			return []fields.InputChoice{}
-		}
-		result := make([]fields.InputChoice, length)
-		for key, r := range result {
-			r.Id, r.Val, r.Checked = fn(key)
-			result[key] = r
-		}
-		return result
-	case func(string, int) (string, string, bool):
-		fn := fnType.(func(string, int) (string, string, bool))
-		result := make(map[string][]fields.InputChoice)
-		values, ok := lenType.(map[string]int)
-		if !ok {
-			return result
-		}
-		for group, length := range values {
-			if _, ok := result[group]; !ok {
-				result[group] = make([]fields.InputChoice, length)
-			}
-			for key, r := range result[group] {
-				r.Id, r.Val, r.Checked = fn(group, key)
-				result[group][key] = r
-			}
-		}
-		return result
-	}
-	return nil
+	return GenChoices(lenType, fnType)
 }
 
-func NewForm(style string, args ...string) *Form {
-	if style == "" {
-		style = formcommon.BASE
-	}
-	var method, action string
-	var tmplFile string = formcommon.TmplDir + "/baseform.html"
-	switch len(args) {
-	case 0:
-		tmplFile = formcommon.TmplDir + "/allfields.html"
-	case 1:
-		method = args[0]
-	case 2:
-		method = args[0]
-		action = args[1]
-	case 3:
-		method = args[0]
-		action = args[1]
-		tmplFile = args[2]
-	}
-	tmpl, ok := formcommon.CachedTemplate(tmplFile)
-	if !ok {
-		tmpl = template.Must(template.ParseFiles(formcommon.CreateUrl(tmplFile)))
-		formcommon.SetCachedTemplate(tmplFile, tmpl)
-	}
-	return &Form{
-		fields:       make([]FormElement, 0),
-		fieldMap:     make(map[string]int),
-		containerMap: make(map[string]string),
-		style:        style,
-		template:     tmpl,
-		class:        []string{},
-		id:           "",
-		params:       map[string]string{},
-		css:          map[string]string{},
-		method:       method,
-		action:       template.HTML(action),
-		AppendData:   map[string]interface{}{},
-	}
-}
-
-// NewFormFromModel returns a base form inferring fields, data types and contents from the provided instance.
-// A Submit button is automatically added as a last field; the form is editable and fields can be added, modified or removed as needed.
-// Tags can be used to drive automatic creation: change default widgets for each field, skip fields or provide additional parameters.
-// Basic field -> widget mapping is as follows: string -> textField, bool -> checkbox, time.Time -> datetimeField, int -> numberField;
-// nested structs are also converted and added to the form.
-func NewFormFromModel(m interface{}, style string, args ...string) *Form {
-	form := NewForm(style, args...)
-	form.SetModel(m)
-	flist, fsort := unWindStructure(m, "")
-	for _, v := range flist {
-		form.Elements(v.(FormElement))
-	}
-	form.Elements(FieldSet(
-		"_button_group",
-		fields.SubmitButton("submit", formcommon.LabelFn("Submit")),
-		fields.ResetButton("reset", formcommon.LabelFn("Reset")),
-	).SetTmpl("fieldset_buttons"))
-	if fsort != "" {
-		form.Sort(fsort)
-	}
-	return form
-}
-
-func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
+func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	t := reflect.TypeOf(m)
 	v := reflect.ValueOf(m)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 		v = v.Elem()
 	}
-	fieldList := make([]interface{}, 0)
+	var fieldList []interface{}
 	fieldSort := ""
 	fieldSetList := make(map[string]*FieldSetType, 0)
 	fieldSetSort := make(map[string]string, 0)
 	for i := 0; i < t.NumField(); i++ {
 		options := make(map[string]struct{})
-		tag, tagf := formcommon.Tago(t, t.Field(i), "form_options")
-		if tag != "" {
-			var optionsArr []string = make([]string, 0)
+		tag, tagf := common.Tag(t, t.Field(i), "form_options")
+		if len(tag) > 0 {
+			var optionsArr []string
 			if tagf != nil {
-				cached := tagf.GetParsed("form_options", func() interface{} {
-					return strings.Split(formcommon.Tag(t, i, "form_options"), ";")
+				cached := tagf.Parsed("form_options", func() interface{} {
+					return strings.Split(common.TagVal(t, i, "form_options"), ";")
 				})
 				optionsArr = cached.([]string)
 			}
 			for _, opt := range optionsArr {
-				if opt != "" {
+				if len(opt) > 0 {
 					options[opt] = struct{}{}
 				}
 			}
 		}
 		if _, ok := options["-"]; !ok {
-			widget := formcommon.Tag(t, i, "form_widget")
+			widget := common.TagVal(t, i, "form_widget")
 			var f fields.FieldInterface
 			var fName string
-			if baseName == "" {
+			if len(baseName) == 0 {
 				fName = t.Field(i).Name
 			} else {
 				fName = strings.Join([]string{baseName, t.Field(i).Name}, ".")
 			}
+			useFieldValue := form.IsOmit(fName) == false
 			//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
 			switch widget {
 			case "color", "email", "file", "image", "month", "search", "tel", "url", "week":
-				f = fields.TextFieldFromInstance(v, t, i, fName, widget)
+				f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue, widget)
 			case "text":
-				f = fields.TextFieldFromInstance(v, t, i, fName)
+				f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "hidden":
-				f = fields.HiddenFieldFromInstance(v, t, i, fName)
+				f = fields.HiddenFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "textarea":
-				f = fields.TextAreaFieldFromInstance(v, t, i, fName)
+				f = fields.TextAreaFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "password":
-				f = fields.PasswordFieldFromInstance(v, t, i, fName)
+				f = fields.PasswordFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "select":
-				f = fields.SelectFieldFromInstance(v, t, i, fName, options)
+				f = fields.SelectFieldFromInstance(v, t, i, fName, useFieldValue, options, form.labelFn)
 			case "date":
-				f = fields.DateFieldFromInstance(v, t, i, fName)
+				f = fields.DateFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "datetime":
-				f = fields.DatetimeFieldFromInstance(v, t, i, fName)
+				f = fields.DatetimeFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "time":
-				f = fields.TimeFieldFromInstance(v, t, i, fName)
+				f = fields.TimeFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "number":
-				f = fields.NumberFieldFromInstance(v, t, i, fName)
+				f = fields.NumberFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "range":
-				f = fields.RangeFieldFromInstance(v, t, i, fName)
+				f = fields.RangeFieldFromInstance(v, t, i, fName, useFieldValue)
 			case "radio":
-				f = fields.RadioFieldFromInstance(v, t, i, fName)
+				f = fields.RadioFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
 			case "checkbox":
-				f = fields.CheckboxFieldFromInstance(v, t, i, fName)
+				f = fields.CheckboxFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
 			case "static":
-				f = fields.StaticFieldFromInstance(v, t, i, fName)
+				f = fields.StaticFieldFromInstance(v, t, i, fName, useFieldValue)
 			default:
 				switch t.Field(i).Type.String() {
 				case "string":
-					f = fields.TextFieldFromInstance(v, t, i, fName)
+					f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
 				case "bool":
-					f = fields.CheckboxFromInstance(v, t, i, fName, options)
+					f = fields.CheckboxFromInstance(v, t, i, fName, useFieldValue, options)
 				case "time.Time":
-					f = fields.DatetimeFieldFromInstance(v, t, i, fName)
-				case "int", "int64":
-					f = fields.NumberFieldFromInstance(v, t, i, fName)
-				case "float", "float64":
-					f = fields.NumberFieldFromInstance(v, t, i, fName)
+					f = fields.DatetimeFieldFromInstance(v, t, i, fName, useFieldValue)
+				case "int", "int64", "float", "float32", "float64":
+					f = fields.NumberFieldFromInstance(v, t, i, fName, useFieldValue)
 				case "struct":
-					fl, fs := unWindStructure(v.Field(i).Interface(), fName)
-					if fs != "" {
-						if fieldSort == "" {
+					fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
+					if len(fs) > 0 {
+						if len(fieldSort) == 0 {
 							fieldSort = fs
 						} else {
 							fieldSort += "," + fs
@@ -263,9 +455,9 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 				default:
 					if t.Field(i).Type.Kind() == reflect.Struct ||
 						(t.Field(i).Type.Kind() == reflect.Ptr && t.Field(i).Type.Elem().Kind() == reflect.Struct) {
-						fl, fs := unWindStructure(v.Field(i).Interface(), fName)
-						if fs != "" {
-							if fieldSort == "" {
+						fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
+						if len(fs) > 0 {
+							if len(fieldSort) == 0 {
 								fieldSort = fs
 							} else {
 								fieldSort += "," + fs
@@ -274,24 +466,24 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 						fieldList = append(fieldList, fl...)
 						f = nil
 					} else {
-						f = fields.TextFieldFromInstance(v, t, i, fName)
+						f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
 					}
 				}
 			}
 			if f != nil {
-				label := formcommon.Tag(t, i, "form_label")
-				if label == "" {
+				label := common.TagVal(t, i, "form_label")
+				if len(label) == 0 {
 					label = strings.Title(t.Field(i).Name)
 				}
-				label = formcommon.LabelFn(label)
+				label = form.labelFn(label)
 				f.SetLabel(label)
 
-				params := formcommon.Tag(t, i, "form_params")
-				if params != "" {
+				params := common.TagVal(t, i, "form_params")
+				if len(params) > 0 {
 					if paramsMap, err := url.ParseQuery(params); err == nil {
 						for k, v := range paramsMap {
 							if k == "placeholder" || k == "title" {
-								v[0] = formcommon.LabelFn(v[0])
+								v[0] = form.labelFn(v[0])
 							}
 							f.SetParam(k, v[0])
 						}
@@ -299,31 +491,40 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 						fmt.Println(err)
 					}
 				}
-				valid := formcommon.Tag(t, i, "valid")
-				if valid != "" {
-					ValidTagFn(valid, f)
+				valid := common.TagVal(t, i, "valid")
+				if len(valid) > 0 {
+					form.validTagFn(valid, f)
 				}
-				fieldset := formcommon.Tag(t, i, "form_fieldset")
-				fieldsort := formcommon.Tag(t, i, "form_sort")
-				if fieldset != "" {
-					fieldset = formcommon.LabelFn(fieldset)
-					f.SetData("container", "fieldset")
-					if _, ok := fieldSetList[fieldset]; !ok {
-						fieldSetList[fieldset] = FieldSet(fieldset, f)
-					} else {
-						fieldSetList[fieldset].Elements(f)
+				fieldsetLabel := common.TagVal(t, i, "form_fieldset")
+				fieldsort := common.TagVal(t, i, "form_sort")
+				if len(fieldsetLabel) > 0 {
+					fieldsets := strings.SplitN(fieldsetLabel, ";", 2)
+					fieldsetName := ""
+					switch len(fieldsets) {
+					case 1:
+						fieldsetName = fieldsets[0]
+					case 2:
+						fieldsetLabel = fieldsets[0]
+						fieldsetName = fieldsets[1]
 					}
-					if fieldsort != "" {
-						if _, ok := fieldSetSort[fieldset]; !ok {
-							fieldSetSort[fieldset] = fName + ":" + fieldsort
+					fieldsetLabel = form.labelFn(fieldsetLabel)
+					f.SetData("container", "fieldset")
+					if _, ok := fieldSetList[fieldsetName]; !ok {
+						fieldSetList[fieldsetName] = form.NewFieldSet(fieldsetName, fieldsetLabel, f)
+					} else {
+						fieldSetList[fieldsetName].Elements(f)
+					}
+					if len(fieldsort) > 0 {
+						if _, ok := fieldSetSort[fieldsetName]; !ok {
+							fieldSetSort[fieldsetName] = fName + ":" + fieldsort
 						} else {
-							fieldSetSort[fieldset] += "," + fName + ":" + fieldsort
+							fieldSetSort[fieldsetName] += "," + fName + ":" + fieldsort
 						}
 					}
 				} else {
 					fieldList = append(fieldList, f)
-					if fieldsort != "" {
-						if fieldSort == "" {
+					if len(fieldsort) > 0 {
+						if len(fieldSort) == 0 {
 							fieldSort = fName + ":" + fieldsort
 						} else {
 							fieldSort += "," + fName + ":" + fieldsort
@@ -334,7 +535,7 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 		}
 	}
 	for _, v := range fieldSetList {
-		if s, ok := fieldSetSort[v.Name()]; ok {
+		if s, ok := fieldSetSort[v.OriginalName()]; ok {
 			v.Sort(s)
 		}
 		fieldList = append(fieldList, v)
@@ -342,134 +543,357 @@ func unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	return fieldList, fieldSort
 }
 
-var ValidTagFn func(string, fields.FieldInterface) = Html5Validate
+func (f *Form) SetData(key string, value interface{}) {
+	f.AppendData[key] = value
+}
 
-func ValidationEngine(valid string, f fields.FieldInterface) {
-	//for jQuery-Validation-Engine
-	validFuncs := strings.Split(valid, ";")
-	var validClass string
-	for _, v := range validFuncs {
-		pos := strings.Index(v, "(")
-		var fn string
-		if pos > -1 {
-			fn = v[0:pos]
-		} else {
-			fn = v
-		}
-		switch fn {
-		case "Required":
-			validClass += "," + strings.ToLower(fn)
-		case "Min", "Max":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			validClass += "," + strings.ToLower(fn) + "[" + val + "]"
-		case "Range":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			rangeVals := strings.SplitN(val, ",", 2)
-			validClass += ",min[" + strings.TrimSpace(rangeVals[0]) + "],max[" + strings.TrimSpace(rangeVals[1]) + "]"
-		case "MinSize":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			validClass += ",minSize[" + val + "]"
-		case "MaxSize":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			validClass += ",maxSize[" + val + "]"
-		case "Numeric":
-			validClass += ",number"
-		case "AlphaNumeric":
-			validClass += ",custom[onlyLetterNumber]"
-		/*
-			case "Length":
-				validClass += ",length"
-			case "Match":
-				val := v[pos+1:]
-				val = strings.TrimSuffix(val, ")")
-				val = strings.Trim(val, "/")
-				validClass += ",match[]"
-		*/
-		case "AlphaDash":
-			validClass += ",custom[onlyLetterNumber]"
-		case "IP":
-			validClass += ",custom[ipv4]"
-		case "Alpha", "Email", "Base64", "Mobile", "Tel", "Phone":
-			validClass += ",custom[" + strings.ToLower(fn) + "]"
-		case "ZipCode":
-			validClass += ",custom[zip]"
-		}
+func (f *Form) Data() map[string]interface{} {
+	if len(f.data) > 0 {
+		return f.data
 	}
-	if validClass != "" {
-		validClass = strings.TrimPrefix(validClass, ",")
-		validClass = "validate[" + validClass + "]"
-		f.AddClass(validClass)
+	safeParams := make(map[template.HTMLAttr]interface{})
+	for k, v := range f.Params {
+		safeParams[template.HTMLAttr(k)] = v
+	}
+
+	f.data = map[string]interface{}{
+		"container": "",
+		"fields":    f.FieldList,
+		"classes":   f.Class,
+		"id":        f.ID,
+		"params":    safeParams,
+		"css":       f.CSS,
+		"method":    f.Method,
+		"action":    f.Action,
+	}
+	for k, v := range f.AppendData {
+		f.data[k] = v
+	}
+	return f.data
+}
+
+func (f *Form) runBefore() {
+	if f.beforeRender != nil {
+		for _, fn := range f.beforeRender {
+			fn()
+		}
 	}
 }
 
-func Html5Validate(valid string, f fields.FieldInterface) {
-	validFuncs := strings.Split(valid, ";")
-	for _, v := range validFuncs {
-		pos := strings.Index(v, "(")
-		var fn string
-		if pos > -1 {
-			fn = v[0:pos]
-		} else {
-			fn = v
-		}
-		switch fn {
-		case "Required":
-			f.AddTag(strings.ToLower(fn))
-		case "Min", "Max":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			f.SetParam(strings.ToLower(fn), val)
-		case "Range":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			rangeVals := strings.SplitN(val, ",", 2)
-			f.SetParam("min", strings.TrimSpace(rangeVals[0]))
-			f.SetParam("max", strings.TrimSpace(rangeVals[1]))
-		case "MinSize":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			f.SetParam("data-min", val)
-		case "MaxSize":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			f.SetParam("maxlength", val)
-			f.SetParam("data-max", val)
-		case "Numeric":
-			f.SetParam("pattern", template.HTML("^\\-?\\d+(\\.\\d+)?$"))
-		case "AlphaNumeric":
-			f.SetParam("pattern", template.HTML("^[\\w\\d]+$"))
-		case "Length":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			f.SetParam("pattern", ".{"+val+"}")
-		case "Match":
-			val := v[pos+1:]
-			val = strings.TrimSuffix(val, ")")
-			val = strings.Trim(val, "/")
-			f.SetParam("pattern", template.HTML(val))
+func (f *Form) dataForRender() string {
+	f.runBefore()
+	buf := bytes.NewBuffer(nil)
+	err := f.template.Execute(buf, f.Data())
+	if err != nil {
+		return err.Error()
+	}
+	return buf.String()
+}
 
-		case "AlphaDash":
-			f.SetParam("pattern", template.HTML("^[\\d\\w-]+$"))
-		case "IP":
-			f.SetParam("pattern", template.HTML("^((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)$"))
-		case "Alpha":
-			f.SetParam("pattern", template.HTML("^[a-zA-Z]+$"))
-		case "Email":
-			f.SetParam("pattern", template.HTML("[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?"))
-		case "Base64":
-			f.SetParam("pattern", template.HTML("^(?:[A-Za-z0-99+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"))
-		case "Mobile":
-			f.SetParam("pattern", template.HTML("^((\\+86)|(86))?(1(([35][0-9])|(47)|[8][\\d]))\\d{8}$"))
-		case "Tel":
-			f.SetParam("pattern", template.HTML("^(0\\d{2,3}(\\-)?)?\\d{7,8}$"))
-		case "Phone":
-			f.SetParam("pattern", template.HTML("^(((\\+86)|(86))?(1(([35][0-9])|(47)|[8][012356789]))\\d{8}|(0\\d{2,3}(\\-)?)?\\d{7,8})$"))
-		case "ZipCode":
-			f.SetParam("pattern", template.HTML("^[1-9]\\d{5}$"))
+// Render executes the internal template and renders the form, returning the result as a template.HTML object embeddable
+// in any other template.
+func (f *Form) Render() template.HTML {
+	return template.HTML(f.dataForRender())
+}
+
+func (f *Form) Html(value interface{}) template.HTML {
+	return template.HTML(fmt.Sprintf("%v", value))
+}
+
+func (f *Form) String() string {
+	return f.dataForRender()
+}
+
+// Elements adds the provided elements to the form.
+func (f *Form) Elements(elems ...conf.FormElement) {
+	for _, e := range elems {
+		t := reflect.TypeOf(e)
+		switch {
+		case t.Implements(reflect.TypeOf((*fields.FieldInterface)(nil)).Elem()):
+			f.addField(e.(fields.FieldInterface))
+		case reflect.ValueOf(e).Type().String() == "*forms.FieldSetType":
+			f.addFieldSet(e.(*FieldSetType))
+		case reflect.ValueOf(e).Type().String() == "*forms.LangSetType":
+			f.addLangSet(e.(*LangSetType))
 		}
 	}
+}
+
+func (f *Form) addField(field fields.FieldInterface) *Form {
+	field.SetStyle(f.Style)
+	f.FieldList = append(f.FieldList, field)
+	f.FieldMap[field.OriginalName()] = len(f.FieldList) - 1
+	return f
+}
+
+func (f *Form) addFieldSet(fs *FieldSetType) *Form {
+	for _, v := range fs.FieldList {
+		v.SetStyle(f.Style)
+		v.SetData("container", "fieldset")
+		f.ContainerMap[v.OriginalName()] = fs.OriginalName()
+	}
+	f.FieldList = append(f.FieldList, fs)
+	f.FieldMap[fs.OriginalName()] = len(f.FieldList) - 1
+	return f
+}
+
+func (f *Form) addLangSet(fs *LangSetType) *Form {
+	for _, v := range fs.FieldMap {
+		v.SetData("container", "langset")
+		f.ContainerMap[v.OriginalName()] = fs.OriginalName()
+	}
+	f.FieldList = append(f.FieldList, fs)
+	f.FieldMap[fs.OriginalName()] = len(f.FieldList) - 1
+	return f
+}
+
+// RemoveElement removes an element (identified by name) from the Form.
+func (f *Form) RemoveElement(name string) *Form {
+	ind, ok := f.FieldMap[name]
+	if !ok {
+		return f
+	}
+	delete(f.FieldMap, name)
+	f.FieldList = append(f.FieldList[:ind], f.FieldList[ind+1:]...)
+	return f
+}
+
+// AddClass associates the provided class to the Form.
+func (f *Form) AddClass(class string) *Form {
+	f.Class = append(f.Class, class)
+	return f
+}
+
+// RemoveClass removes the given class (if present) from the Form.
+func (f *Form) RemoveClass(class string) *Form {
+	ind := -1
+	for i, v := range f.Class {
+		if v == class {
+			ind = i
+			break
+		}
+	}
+
+	if ind != -1 {
+		f.Class = append(f.Class[:ind], f.Class[ind+1:]...)
+	}
+	return f
+}
+
+// SetID set the given id to the form.
+func (f *Form) SetID(id string) *Form {
+	f.ID = id
+	return f
+}
+
+// SetParam adds the given key-value pair to form parameters list.
+func (f *Form) SetParam(key, value string) *Form {
+	switch key {
+	case `class`:
+		f.AddClass(value)
+	case `action`:
+		f.Action = template.HTML(value)
+	default:
+		f.Params[key] = value
+	}
+	return f
+}
+
+// DeleteParam removes the parameter identified by key from form parameters list.
+func (f *Form) DeleteParam(key string) *Form {
+	delete(f.Params, key)
+	return f
+}
+
+// AddCSS add a CSS value (in the form of option-value - e.g.: border - auto) to the form.
+func (f *Form) AddCSS(key, value string) *Form {
+	f.CSS[key] = value
+	return f
+}
+
+// RemoveCSS removes CSS style from the form.
+func (f *Form) RemoveCSS(key string) *Form {
+	delete(f.CSS, key)
+	return f
+}
+
+// Field returns the field identified by name. It returns an empty field if it is missing.
+func (f *Form) Field(name string) fields.FieldInterface {
+	ind, ok := f.FieldMap[name]
+	if !ok {
+		return &fields.Field{}
+	}
+	t := reflect.TypeOf(f.FieldList[ind])
+	switch {
+	case t.Implements(reflect.TypeOf((*fields.FieldInterface)(nil)).Elem()):
+		return f.FieldList[ind].(fields.FieldInterface)
+	case t.Implements(reflect.TypeOf((*FieldSetType)(nil)).Elem()):
+		if v, ok := f.ContainerMap[name]; ok {
+			return f.FieldSet(v).Field(name)
+		}
+	case t.Implements(reflect.TypeOf((*LangSetType)(nil)).Elem()):
+		if v, ok := f.ContainerMap[name]; ok {
+			return f.LangSet(v).Field(name)
+		}
+	}
+	if f.debug {
+		fmt.Printf("[Form] Not found field: %s , but has: %#v\n", name, f.FieldMap)
+	}
+	return &fields.Field{}
+}
+
+// Fields returns all field
+func (f *Form) Fields() []conf.FormElement {
+	return f.FieldList
+}
+
+// LangSet returns the fieldset identified by name. It returns an empty field if it is missing.
+func (f *Form) LangSet(name string) *LangSetType {
+	ind, ok := f.FieldMap[name]
+	if !ok {
+		return &LangSetType{}
+	}
+	switch reflect.ValueOf(f.FieldList[ind]).Type().String() {
+	case "*forms.LangSetType":
+		return f.FieldList[ind].(*LangSetType)
+	default:
+		return &LangSetType{}
+	}
+}
+
+func (f *Form) NewLangSet(name string, langs []*conf.Language) *LangSetType {
+	return LangSet(name, f.Style, langs...)
+}
+
+// FieldSet returns the fieldset identified by name. It returns an empty field if it is missing.
+func (f *Form) FieldSet(name string) *FieldSetType {
+	ind, ok := f.FieldMap[name]
+	if !ok {
+		return &FieldSetType{}
+	}
+	switch reflect.ValueOf(f.FieldList[ind]).Type().String() {
+	case "*forms.FieldSetType":
+		return f.FieldList[ind].(*FieldSetType)
+	default:
+		return &FieldSetType{}
+	}
+}
+
+// NewFieldSet creates and returns a new FieldSetType with the given name and list of fields.
+// Every method for FieldSetType objects returns the object itself, so that call can be chained.
+func (f *Form) NewFieldSet(name string, label string, elems ...fields.FieldInterface) *FieldSetType {
+	return FieldSet(name, label, f.Style, elems...)
+}
+
+// SortAll SortAll("field1,field2") or SortAll("field1","field2")
+func (f *Form) SortAll(sortList ...string) *Form {
+	elem := f.FieldList
+	size := len(elem)
+	f.FieldList = make([]conf.FormElement, size)
+	var sortSlice []string
+	if len(sortList) == 1 {
+		sortSlice = strings.Split(sortList[0], ",")
+	} else {
+		sortSlice = sortList
+	}
+	for k, fieldName := range sortSlice {
+		if oldIndex, ok := f.FieldMap[fieldName]; ok {
+			f.FieldList[k] = elem[oldIndex]
+			f.FieldMap[fieldName] = k
+		}
+	}
+	return f
+}
+
+// Sort Sort("field1:1,field2:2") or Sort("field1:1","field2:2")
+func (f *Form) Sort(sortList ...string) *Form {
+	size := len(f.FieldList)
+	var sortSlice []string
+	if len(sortList) == 1 {
+		sortSlice = strings.Split(sortList[0], ",")
+	} else {
+		sortSlice = sortList
+	}
+	var index int
+	endIdx := size - 1
+
+	for _, nameIndex := range sortSlice {
+		ni := strings.Split(nameIndex, ":")
+		fieldName := ni[0]
+		if len(ni) > 1 {
+			if ni[1] == "last" {
+				index = endIdx
+			} else if idx, err := strconv.Atoi(ni[1]); err != nil {
+				continue
+			} else {
+				if idx >= 0 {
+					index = idx
+				} else {
+					index = size + idx
+				}
+			}
+		}
+		if oldIndex, ok := f.FieldMap[fieldName]; ok {
+			if oldIndex != index && size > index {
+				f.sortFields(index, oldIndex, endIdx, size)
+			}
+		}
+		index++
+	}
+	return f
+}
+
+func (f *Form) Sort2Last(fieldsName ...string) *Form {
+	size := len(f.FieldList)
+	endIdx := size - 1
+	index := endIdx
+	for n := len(fieldsName) - 1; n >= 0; n-- {
+		fieldName := fieldsName[n]
+		if oldIndex, ok := f.FieldMap[fieldName]; ok {
+			if oldIndex != index && index >= 0 {
+				f.sortFields(index, oldIndex, endIdx, size)
+			}
+		}
+		index--
+	}
+	return f
+}
+
+func (f *Form) sortFields(index, oldIndex, endIdx, size int) {
+
+	var newFields []conf.FormElement
+	oldFields := make([]conf.FormElement, size)
+	copy(oldFields, f.FieldList)
+	var min, max int
+	if index > oldIndex {
+		//[ ][I][ ][ ][ ][ ] I:oldIndex=1
+		//[ ][ ][ ][ ][I][ ] I:index=4
+		if oldIndex > 0 {
+			newFields = oldFields[0:oldIndex]
+		}
+		newFields = append(newFields, oldFields[oldIndex+1:index+1]...)
+		newFields = append(newFields, f.FieldList[oldIndex])
+		if index+1 <= endIdx {
+			newFields = append(newFields, f.FieldList[index+1:]...)
+		}
+		min = oldIndex
+		max = index
+	} else {
+		//[ ][ ][ ][ ][I][ ] I:oldIndex=4
+		//[ ][I][ ][ ][ ][ ] I:index=1
+		if index > 0 {
+			newFields = oldFields[0:index]
+		}
+		newFields = append(newFields, oldFields[oldIndex])
+		newFields = append(newFields, f.FieldList[index:oldIndex]...)
+		if oldIndex+1 <= endIdx {
+			newFields = append(newFields, f.FieldList[oldIndex+1:]...)
+		}
+		min = index
+		max = oldIndex
+	}
+	for i := min; i <= max; i++ {
+		f.FieldMap[newFields[i].OriginalName()] = i
+	}
+	f.FieldList = newFields
 }

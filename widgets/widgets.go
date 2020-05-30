@@ -1,4 +1,22 @@
-// This package contains the base logic for the creation and rendering of field widgets. Base widgets are defined for most input fields,
+/*
+
+   Copyright 2016-present Wenhui Shen <www.webx.top>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+*/
+
+//Package widgets This package contains the base logic for the creation and rendering of field widgets. Base widgets are defined for most input fields,
 // both in classic and Bootstrap3 style; custom widgets can be defined and associated to a field, provided that they implement the
 // WidgetInterface interface.
 package widgets
@@ -10,7 +28,7 @@ import (
 	"github.com/coscms/forms/common"
 )
 
-// Simple widget object that gets executed at render time.
+// Widget Simple widget object that gets executed at render time.
 type Widget struct {
 	template *template.Template
 }
@@ -30,112 +48,109 @@ func (w *Widget) Render(data interface{}) string {
 
 // BaseWidget creates a Widget based on style and inpuType parameters, both defined in the common package.
 func BaseWidget(style, inputType, tmplName string) *Widget {
-	var cachedKey string = style+", "+inputType+", "+tmplName
-	templ, ok := formcommon.CachedTemplate(cachedKey)
+	cachedKey := style + ", " + inputType + ", " + tmplName
+	tmpl, ok := common.CachedTemplate(cachedKey)
 	if !ok {
 		var (
-			fpath string = formcommon.TmplDir + "/" + style + "/"
-			urls []string = []string{formcommon.CreateUrl(fpath + "generic.tmpl")}
-			tpath string = widgetTmpl(inputType, tmplName)
+			fpath = common.TmplDir(style) + "/" + style + "/"
+			urls  = []string{common.CreateUrl(fpath + "generic.tmpl")}
+			tpath = widgetTmpl(inputType, tmplName)
 		)
-		urls = append(urls, formcommon.CreateUrl(fpath+tpath+".html"))
-		templ = template.Must(template.ParseFiles(urls...))
-		formcommon.SetCachedTemplate(cachedKey, templ)
+		urls = append(urls, common.CreateUrl(fpath+tpath+".html"))
+		var err error
+		tmpl, err = common.ParseFiles(urls...)
+		if err != nil {
+			panic(err)
+		}
+		common.SetCachedTemplate(cachedKey, tmpl)
+	} else {
+		tmpl.Funcs(common.TplFuncs())
 	}
-	return &Widget{templ}
+	return &Widget{tmpl}
 }
 
 func widgetTmpl(inputType, tmpl string) (tpath string) {
 	switch inputType {
-	case formcommon.BUTTON:
+	case common.BUTTON:
 		tpath = "button"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = tmpl
 		}
-	case formcommon.TEXTAREA:
+	case common.TEXTAREA:
 		tpath = "text/textareainput"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "text/" + tmpl
 		}
-	case formcommon.PASSWORD:
+	case common.PASSWORD:
 		tpath = "text/passwordinput"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "text/" + tmpl
 		}
-	case formcommon.TEXT:
+	case common.TEXT:
 		tpath = "text/textinput"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "text/" + tmpl
 		}
-	case formcommon.CHECKBOX:
+	case common.CHECKBOX:
 		tpath = "options/checkbox"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "options/" + tmpl
 		}
-	case formcommon.SELECT:
+	case common.SELECT:
 		tpath = "options/select"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "options/" + tmpl
 		}
-	case formcommon.RADIO:
+	case common.RADIO:
 		tpath = "options/radiobutton"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "options/" + tmpl
 		}
-	case formcommon.RANGE:
+	case common.RANGE:
 		tpath = "number/range"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "number/" + tmpl
 		}
-	case formcommon.NUMBER:
+	case common.NUMBER:
 		tpath = "number/number"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "number/" + tmpl
 		}
-	case formcommon.RESET, formcommon.SUBMIT:
+	case common.RESET, common.SUBMIT:
 		tpath = "button"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = tmpl
 		}
-	case formcommon.DATE:
+	case common.DATE:
 		tpath = "datetime/date"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "datetime/" + tmpl
 		}
-	case formcommon.DATETIME:
+	case common.DATETIME:
 		tpath = "datetime/datetime"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "datetime/" + tmpl
 		}
-	case formcommon.TIME:
+	case common.TIME:
 		tpath = "datetime/time"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "datetime/" + tmpl
 		}
-	case formcommon.DATETIME_LOCAL:
+	case common.DATETIME_LOCAL:
 		tpath = "datetime/datetime"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = "datetime/" + tmpl
 		}
-	case formcommon.STATIC:
+	case common.STATIC:
 		tpath = "static"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = tmpl
 		}
-	case formcommon.SEARCH,
-		formcommon.TEL,
-		formcommon.URL,
-		formcommon.WEEK,
-		formcommon.COLOR,
-		formcommon.EMAIL,
-		formcommon.FILE,
-		formcommon.HIDDEN,
-		formcommon.IMAGE,
-		formcommon.MONTH:
+	case common.SEARCH, common.TEL, common.URL, common.WEEK, common.COLOR, common.EMAIL, common.FILE, common.HIDDEN, common.IMAGE, common.MONTH:
 		fallthrough
 	default:
 		tpath = "input"
-		if tmpl != "" {
+		if len(tmpl) > 0 {
 			tpath = tmpl
 		}
 	}

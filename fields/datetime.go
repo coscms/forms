@@ -1,8 +1,24 @@
+/*
+
+   Copyright 2016-present Wenhui Shen <www.webx.top>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+*/
+
 package fields
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -11,102 +27,158 @@ import (
 
 // Datetime format string to convert from time.Time objects to HTML fields and viceversa.
 const (
-	DATETIME_FORMAT = "2006-01-02T15:05"
+	DATETIME_FORMAT = "2006-01-02 15:05"
 	DATE_FORMAT     = "2006-01-02"
 	TIME_FORMAT     = "15:05"
 )
 
+func ConvertTime(v interface{}) (time.Time, bool) {
+	t, ok := v.(time.Time)
+	isEmpty := false
+	if !ok {
+		var timestamp int64
+		if i, y := v.(int); y {
+			timestamp = int64(i)
+		} else if i, y := v.(int64); y {
+			timestamp = i
+		}
+		if timestamp > 0 {
+			t = time.Unix(timestamp, 0)
+		} else {
+			isEmpty = true
+		}
+	}
+	return t, isEmpty
+}
+
 // DatetimeField creates a default datetime input field with the given name.
 func DatetimeField(name string) *Field {
-	ret := FieldWithType(name, formcommon.DATETIME)
+	ret := FieldWithType(name, common.DATETIME)
 	return ret
 }
 
 // DateField creates a default date input field with the given name.
 func DateField(name string) *Field {
-	ret := FieldWithType(name, formcommon.DATE)
+	ret := FieldWithType(name, common.DATE)
 	return ret
 }
 
 // TimeField creates a default time input field with the given name.
 func TimeField(name string) *Field {
-	ret := FieldWithType(name, formcommon.TIME)
+	ret := FieldWithType(name, common.TIME)
 	return ret
 }
 
 // DatetimeFieldFromInstance creates and initializes a datetime field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-func DatetimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func DatetimeFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool) *Field {
 	ret := DatetimeField(name)
+	dateFormat := DATETIME_FORMAT
+	if v := common.TagVal(t, fieldNo, "form_format"); len(v) > 0 {
+		dateFormat = v
+	}
+	ret.Format = dateFormat
 	// check tags
-	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
-		if !validateDatetime(v) {
-			panic(errors.New(fmt.Sprintf("Invalid date value (min) for field: %s", name)))
+	if v := common.TagVal(t, fieldNo, "form_min"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid date value (min) for field: " + name)
 		}
 		ret.SetParam("min", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_max"); v != "" {
-		if !validateDatetime(v) {
-			panic(errors.New(fmt.Sprintf("Invalid date value (max) for field: %s", name)))
+	if v := common.TagVal(t, fieldNo, "form_max"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid date value (max) for field: " + name)
 		}
 		ret.SetParam("max", v)
 	}
-	v := formcommon.Tag(t, fieldNo, "form_value")
-	if vt := val.Field(fieldNo).Interface().(time.Time); !vt.IsZero() {
-		v = vt.Format(DATETIME_FORMAT)
+
+	if useFieldValue {
+		if vt, isEmpty := ConvertTime(val.Field(fieldNo).Interface()); !vt.IsZero() {
+			ret.SetValue(vt.Format(dateFormat))
+		} else if isEmpty {
+			ret.SetValue(``)
+		}
+	} else if v := common.TagVal(t, fieldNo, "form_value"); len(v) > 0 {
+		ret.SetValue(v)
 	}
-	ret.SetValue(v)
 	return ret
 }
 
 // DateFieldFromInstance creates and initializes a date field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-func DateFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func DateFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool) *Field {
 	ret := DateField(name)
+	dateFormat := DATE_FORMAT
+	if v := common.TagVal(t, fieldNo, "form_format"); len(v) > 0 {
+		dateFormat = v
+	}
+	ret.Format = dateFormat
 	// check tags
-	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
-		if !validateDate(v) {
-			panic(errors.New(fmt.Sprintf("Invalid date value (min) for field", name)))
+	if v := common.TagVal(t, fieldNo, "form_min"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid date value (min) for field: " + name)
 		}
 		ret.SetParam("min", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_max"); v != "" {
-		if !validateDate(v) {
-			panic(errors.New(fmt.Sprintf("Invalid date value (max) for field", name)))
+	if v := common.TagVal(t, fieldNo, "form_max"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid date value (max) for field: " + name)
 		}
 		ret.SetParam("max", v)
 	}
-	v := formcommon.Tag(t, fieldNo, "form_value")
-	if vt := val.Field(fieldNo).Interface().(time.Time); !vt.IsZero() {
-		v = vt.Format(DATE_FORMAT)
+
+	if useFieldValue {
+		if vt, isEmpty := ConvertTime(val.Field(fieldNo).Interface()); !vt.IsZero() {
+			ret.SetValue(vt.Format(dateFormat))
+		} else if isEmpty {
+			ret.SetValue(``)
+		}
+	} else if v := common.TagVal(t, fieldNo, "form_value"); len(v) > 0 {
+		ret.SetValue(v)
 	}
-	ret.SetValue(v)
 	return ret
 }
 
 // TimeFieldFromInstance creates and initializes a time field based on its name, the reference object instance and field number.
 // This method looks for "form_min", "form_max" and "form_value" tags to add additional parameters to the field.
-func TimeFieldFromInstance(val reflect.Value,t reflect.Type, fieldNo int, name string) *Field {
+func TimeFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool) *Field {
 	ret := TimeField(name)
+	dateFormat := TIME_FORMAT
+	if v := common.TagVal(t, fieldNo, "form_format"); len(v) > 0 {
+		dateFormat = v
+	}
+	ret.Format = dateFormat
 	// check tags
-	if v := formcommon.Tag(t, fieldNo, "form_min"); v != "" {
-		if !validateTime(v) {
-			panic(errors.New(fmt.Sprintf("Invalid time value (min) for field", name)))
+	if v := common.TagVal(t, fieldNo, "form_min"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid time value (min) for field: " + name)
 		}
 		ret.SetParam("min", v)
 	}
-	if v := formcommon.Tag(t, fieldNo, "form_max"); v != "" {
-		if !validateTime(v) {
-			panic(errors.New(fmt.Sprintf("Invalid time value (max) for field", name)))
+	if v := common.TagVal(t, fieldNo, "form_max"); len(v) > 0 {
+		if !validateDateformat(v, dateFormat) {
+			panic("Invalid time value (max) for field: " + name)
 		}
 		ret.SetParam("max", v)
 	}
-	if v := val.Field(fieldNo).Interface().(time.Time); !v.IsZero() {
-		ret.SetValue(v.Format(TIME_FORMAT))
-	}else if v := formcommon.Tag(t, fieldNo, "form_value"); v != "" {
+	if useFieldValue {
+		if v, isEmpty := ConvertTime(val.Field(fieldNo).Interface()); !v.IsZero() {
+			ret.SetValue(v.Format(dateFormat))
+		} else if isEmpty {
+			ret.SetValue(``)
+		}
+	} else if v := common.TagVal(t, fieldNo, "form_value"); len(v) > 0 {
 		ret.SetValue(v)
 	}
 	return ret
+}
+
+func validateDateformat(v string, format string) bool {
+	_, err := time.Parse(format, v)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 func validateDatetime(v string) bool {

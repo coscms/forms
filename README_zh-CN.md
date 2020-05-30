@@ -40,7 +40,7 @@ forms
 
 现在，我们可以通过form实例来自定义表单的属性。form实例中的每一个方法都会返回form指针，因此你可以非常方便的采用链式调用来多次执行方法。下面，我们来定义HTML标签`<form>`中的id、class和style属性：
 
-	form.SetId("TestForm").AddClass("form").AddCss("border", "auto")
+	form.SetID("TestForm").AddClass("form").AddCSS("border", "auto")
 
 添加其它表单字段也很容易，比如，我们要添加一个name属性值为“text_field”的文本输入框：
 
@@ -79,7 +79,7 @@ Elements方法可以添加`<fieldset></fieldset>`包围起来的表单字段或�
 	_ = valid
 
 
-表单验证的详细用法请访问: [https://github.com/coscms/xweb/blob/master/validation/README.md](https://github.com/coscms/xweb/blob/master/validation/README.md)
+表单验证的详细用法请访问: [https://github.com/webx-top/validation](https://github.com/webx-top/validation)
 
 调用 `form.Render()` 返回如下表单：
 	
@@ -248,20 +248,20 @@ Option fields
 -------------
 
 This category includes checkbox, select and radio button fields.
-Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
+Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (ID-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{Id:"A", Val:"Option A"},
-		fields.InputChoice{Id:"B", Val:"Option B"},
+		fields.InputChoice{ID:"A", Val:"Option A"},
+		fields.InputChoice{ID:"B", Val:"Option B"},
 	}
 	f := fields.CheckboxField("checkbox", opts)
 	f.AddSelected("A", "B")
 
-Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
+Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (ID-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{Id:"A", Val:"Option A"},
-		fields.InputChoice{Id:"B", Val:"Option B"},
+		fields.InputChoice{ID:"A", Val:"Option A"},
+		fields.InputChoice{ID:"B", Val:"Option B"},
 	}
 	f := fields.RadioField("radio", opts)
 
@@ -270,8 +270,8 @@ Select fields, on the other hand, allow option grouping. This can be achieved by
 	opts := map[string][]fields.InputChoice{
 		"": []fields.InputChoice{fields.InputChoice{"A", "Option A"}},
 		"group1": []fields.InputChoice{
-			fields.InputChoice{Id:"B", Val:"Option B"},
-			fields.InputChoice{Id:"C", Val:"Option C"},
+			fields.InputChoice{ID:"B", Val:"Option B"},
+			fields.InputChoice{ID:"C", Val:"Option C"},
 		}
 	}
 	f := fields.SelectField("select", opts)

@@ -16,29 +16,31 @@
 
 */
 
-package fields
+//Package common This package provides basic constants used by forms packages.
+package common
 
 import (
-	"github.com/coscms/forms/common"
+	"html/template"
+	"path/filepath"
+
+	"github.com/webx-top/echo/middleware/tplfunc"
 )
 
-// SubmitButton creates a default button with the provided name and text.
-func SubmitButton(name string, text string) *Field {
-	ret := FieldWithType(name, common.SUBMIT)
-	ret.SetText(text)
-	return ret
+func TplFuncs() template.FuncMap {
+	return tplfunc.TplFuncMap
 }
 
-// ResetButton creates a default reset button with the provided name and text.
-func ResetButton(name string, text string) *Field {
-	ret := FieldWithType(name, common.RESET)
-	ret.SetText(text)
-	return ret
-}
-
-// Button creates a default generic button
-func Button(name string, text string) *Field {
-	ret := FieldWithType(name, common.BUTTON)
-	ret.SetText(text)
-	return ret
+func ParseFiles(files ...string) (*template.Template,error) {
+	name := filepath.Base(files[0])
+	b, err := FileReader(files[0])
+	if err != nil {
+		return nil, err
+	}
+	tmpl := template.New(name)
+	tmpl.Funcs(TplFuncs())
+	tmpl = template.Must(tmpl.Parse(string(b)))
+	if len(files) > 1 {
+		tmpl = template.Must(tmpl.ParseFiles(files[1:]...))
+	}
+	return tmpl, nil
 }

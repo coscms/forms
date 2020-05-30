@@ -1,3 +1,21 @@
+/*
+
+   Copyright 2016-present Wenhui Shen <www.webx.top>
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+*/
+
 package fields
 
 import (
@@ -8,9 +26,9 @@ import (
 	"github.com/coscms/forms/common"
 )
 
-// Id - Value pair used to define an option for select and redio input fields.
+// InputChoice ID - Value pair used to define an option for select and redio input fields.
 type InputChoice struct {
-	Id, Val string
+	ID, Val string
 	Checked bool
 }
 
@@ -19,40 +37,15 @@ type ChoiceIndex struct {
 	Index int
 }
 
-func defaultValue(val reflect.Value, t reflect.Type, fieldNo int) string {
+func defaultValue(val reflect.Value, t reflect.Type, fieldNo int, useFieldValue bool) string {
 	field := val.Field(fieldNo)
-	var v string = formcommon.Tag(t, fieldNo, "form_value")
-	if v == "" {
+	var v string
+	if useFieldValue {
 		v = fmt.Sprintf("%v", field.Interface())
 	} else {
-		if value := fmt.Sprintf("%v", field.Interface()); value != "" {
-			v = value
-		}
-		/*
-			switch field.Kind() {
-			case reflect.Int, reflect.Int64, reflect.Int32:
-				value := field.Int()
-				if value != 0 {
-					v = fmt.Sprintf("%v", value)
-				}
-			case reflect.Uint, reflect.Uint64, reflect.Uint32:
-				value := field.Uint()
-				if value != 0 {
-					v = fmt.Sprintf("%v", value)
-				}
-			case reflect.Float32, reflect.Float64:
-				value := field.Float()
-				if value != 0 {
-					v = fmt.Sprintf("%v", value)
-				}
-			default:
-				value := fmt.Sprintf("%v", field.Interface())
-				if value != "" {
-					v = value
-				}
-			}
-		*/
+		v = common.TagVal(t, fieldNo, "form_value")
 	}
+
 	return v
 }
 
@@ -60,8 +53,8 @@ func defaultValue(val reflect.Value, t reflect.Type, fieldNo int) string {
 
 // RadioField creates a default radio button input field with the provided name and list of choices.
 func RadioField(name string, choices []InputChoice) *Field {
-	ret := FieldWithType(name, formcommon.RADIO)
-	ret.choices = []InputChoice{}
+	ret := FieldWithType(name, common.RADIO)
+	ret.Choices = []InputChoice{}
 	ret.SetChoices(choices)
 	return ret
 }
@@ -69,18 +62,22 @@ func RadioField(name string, choices []InputChoice) *Field {
 // RadioFieldFromInstance creates and initializes a radio field based on its name, the reference object instance and field number.
 // This method looks for "form_choices" and "form_value" tags to add additional parameters to the field. "form_choices" tag is a list
 // of <id>|<value> options, joined by "|" character; ex: "A|Option A|B|Option B" translates into 2 options: <A, Option A> and <B, Option B>.
-func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
-	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
+func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool, args ...func(string) string) *Field {
+	fn := common.LabelFn
+	if len(args) > 0 {
+		fn = args[0]
+	}
+	choices := strings.Split(common.TagVal(t, fieldNo, "form_choices"), "|")
 	chArr := make([]InputChoice, 0)
 	ret := RadioField(name, chArr)
 	chMap := make(map[string]string)
 	for i := 0; i < len(choices)-1; i += 2 {
-		ret.choiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
-		chArr = append(chArr, InputChoice{choices[i], formcommon.LabelFn(choices[i+1]), false})
+		ret.ChoiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
+		chArr = append(chArr, InputChoice{choices[i], fn(choices[i+1]), false})
 		chMap[choices[i]] = choices[i+1]
 	}
 	ret.SetChoices(chArr, false)
-	v := defaultValue(val, t, fieldNo)
+	v := defaultValue(val, t, fieldNo, useFieldValue)
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
@@ -92,8 +89,8 @@ func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name
 // SelectField creates a default select input field with the provided name and map of choices. Choices for SelectField are grouped
 // by name (if <optgroup> is needed); "" group is the default one and does not trigger a <optgroup></optgroup> rendering.
 func SelectField(name string, choices map[string][]InputChoice) *Field {
-	ret := FieldWithType(name, formcommon.SELECT)
-	ret.choices = map[string][]InputChoice{}
+	ret := FieldWithType(name, common.SELECT)
+	ret.Choices = map[string][]InputChoice{}
 	ret.SetChoices(choices)
 	return ret
 }
@@ -102,27 +99,33 @@ func SelectField(name string, choices map[string][]InputChoice) *Field {
 // This method looks for "form_choices" and "form_value" tags to add additional parameters to the field. "form_choices" tag is a list
 // of <group<|<id>|<value> options, joined by "|" character; ex: "G1|A|Option A|G1|B|Option B" translates into 2 options in the same group G1:
 // <A, Option A> and <B, Option B>. "" group is the default one.
-func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
-	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
+func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool, options map[string]struct{}, args ...func(string) string) *Field {
+	fn := common.LabelFn
+	if len(args) > 0 {
+		fn = args[0]
+	}
+	choices := strings.Split(common.TagVal(t, fieldNo, "form_choices"), "|")
 	chArr := make(map[string][]InputChoice)
 	ret := SelectField(name, chArr)
 	chMap := make(map[string]string)
 	for i := 0; i < len(choices)-2; i += 3 {
-		optgroupLabel := formcommon.LabelFn(choices[i])
+		optgroupLabel := fn(choices[i])
 		if _, ok := chArr[optgroupLabel]; !ok {
 			chArr[optgroupLabel] = make([]InputChoice, 0)
 		}
 		id := choices[i+1]
-		ret.choiceKeys[id] = ChoiceIndex{Group: optgroupLabel, Index: len(chArr[optgroupLabel])}
-		chArr[optgroupLabel] = append(chArr[optgroupLabel], InputChoice{id, formcommon.LabelFn(choices[i+2]), false})
+		ret.ChoiceKeys[id] = ChoiceIndex{Group: optgroupLabel, Index: len(chArr[optgroupLabel])}
+		chArr[optgroupLabel] = append(chArr[optgroupLabel], InputChoice{id, fn(choices[i+2]), false})
 		chMap[id] = choices[i+2]
 	}
 	ret.SetChoices(chArr, false)
 	if _, ok := options["multiple"]; ok {
 		ret.MultipleChoice()
 	}
-	v := defaultValue(val, t, fieldNo)
-	if _, ok := chMap[v]; ok {
+	v := defaultValue(val, t, fieldNo, useFieldValue)
+	if _, ok := options["forceSetValue"]; ok {
+		ret.SetValue(v)
+	} else if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
 	return ret
@@ -131,30 +134,34 @@ func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, nam
 // ================== CHECKBOX
 
 func CheckboxField(name string, choices []InputChoice) *Field {
-	ret := FieldWithType(name, formcommon.CHECKBOX)
-	ret.choices = []InputChoice{}
+	ret := FieldWithType(name, common.CHECKBOX)
+	ret.Choices = []InputChoice{}
 	ret.SetChoices(choices)
-	if len(ret.choices.([]InputChoice)) > 1 {
+	if len(ret.Choices.([]InputChoice)) > 1 {
 		ret.MultipleChoice()
 	}
 	return ret
 }
 
-func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string) *Field {
-	choices := strings.Split(formcommon.Tag(t, fieldNo, "form_choices"), "|")
+func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool, args ...func(string) string) *Field {
+	fn := common.LabelFn
+	if len(args) > 0 {
+		fn = args[0]
+	}
+	choices := strings.Split(common.TagVal(t, fieldNo, "form_choices"), "|")
 	chArr := make([]InputChoice, 0)
 	ret := CheckboxField(name, chArr)
 	chMap := make(map[string]string)
 	for i := 0; i < len(choices)-1; i += 2 {
-		ret.choiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
-		chArr = append(chArr, InputChoice{choices[i], formcommon.LabelFn(choices[i+1]), false})
+		ret.ChoiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
+		chArr = append(chArr, InputChoice{choices[i], fn(choices[i+1]), false})
 		chMap[choices[i]] = choices[i+1]
 	}
 	ret.SetChoices(choices, false)
-	if len(ret.choices.([]InputChoice)) > 1 {
+	if len(ret.Choices.([]InputChoice)) > 1 {
 		ret.MultipleChoice()
 	}
-	v := defaultValue(val, t, fieldNo)
+	v := defaultValue(val, t, fieldNo, useFieldValue)
 	if _, ok := chMap[v]; ok {
 		ret.SetValue(v)
 	}
@@ -164,7 +171,7 @@ func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, n
 // Checkbox creates a default checkbox field with the provided name. It also makes it checked by default based
 // on the checked parameter.
 func Checkbox(name string, checked bool) *Field {
-	ret := FieldWithType(name, formcommon.CHECKBOX)
+	ret := FieldWithType(name, common.CHECKBOX)
 	if checked {
 		ret.AddTag("checked")
 	}
@@ -172,15 +179,21 @@ func Checkbox(name string, checked bool) *Field {
 }
 
 // CheckboxFromInstance creates and initializes a checkbox field based on its name, the reference object instance, field number and field options.
-func CheckboxFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, options map[string]struct{}) *Field {
-	ret := FieldWithType(name, formcommon.CHECKBOX)
+func CheckboxFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool, options map[string]struct{}) *Field {
+	ret := FieldWithType(name, common.CHECKBOX)
+	ret.SetValue("true")
+	checked := false
 	if _, ok := options["checked"]; ok {
-		ret.AddTag("checked")
+		checked = true
 	} else {
-		v := val.Field(fieldNo).Bool()
-		if v {
-			ret.AddTag("checked")
+		if useFieldValue {
+			checked = val.Field(fieldNo).Bool()
 		}
 	}
+	if checked {
+		ret.AddTag("checked")
+	}
+	ret.Choices = []InputChoice{}
+	ret.SetChoices(InputChoice{`true`, ``, checked})
 	return ret
 }

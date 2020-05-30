@@ -43,7 +43,7 @@ You can create a form instance by simply deciding its style and providing its me
 
 Now that you have a form instance you can customize it by adding classes, parameters, CSS values or id. Each method returns a pointer to the same form, so multiple calls can be chained:
 
-	form.SetId("TestForm").AddClass("form").AddCss("border", "auto")
+	form.SetID("TestForm").AddClass("form").AddCSS("border", "auto")
 
 Obviously, elements can be added as well:
 
@@ -83,7 +83,7 @@ validation:
 	_ = valid
 
 
-Details about validation, please visit: https://github.com/coscms/xweb/blob/master/validation/README.md
+Details about validation, please visit: https://github.com/webx-top/validation
 
 A call to `form.Render()` returns the following form:
 	
@@ -252,20 +252,20 @@ Option fields
 -------------
 
 This category includes checkbox, select and radio button fields.
-Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
+Checkbox field requires a name and a set of options to populate the field. The options are just a set of InputChoice (ID-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{Id:"A", Val:"Option A"},
-		fields.InputChoice{Id:"B", Val:"Option B"},
+		fields.InputChoice{ID:"A", Val:"Option A"},
+		fields.InputChoice{ID:"B", Val:"Option B"},
 	}
 	f := fields.CheckboxField("checkbox", opts)
 	f.AddSelected("A", "B")
 
-Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (Id-Value pairs) objects:
+Radio buttons, instead, require a name and a set of options to populate the field. The options are just a set of InputChoice (ID-Value pairs) objects:
 
 	opts := []fields.InputChoice{
-		fields.InputChoice{Id:"A", Val:"Option A"},
-		fields.InputChoice{Id:"B", Val:"Option B"},
+		fields.InputChoice{ID:"A", Val:"Option A"},
+		fields.InputChoice{ID:"B", Val:"Option B"},
 	}
 	f := fields.RadioField("radio", opts)
 
@@ -274,8 +274,8 @@ Select fields, on the other hand, allow option grouping. This can be achieved by
 	opts := map[string][]fields.InputChoice{
 		"": []fields.InputChoice{fields.InputChoice{"A", "Option A"}},
 		"group1": []fields.InputChoice{
-			fields.InputChoice{Id:"B", Val:"Option B"},
-			fields.InputChoice{Id:"C", Val:"Option C"},
+			fields.InputChoice{ID:"B", Val:"Option B"},
+			fields.InputChoice{ID:"C", Val:"Option C"},
 		}
 	}
 	f := fields.SelectField("select", opts)
