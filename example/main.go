@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	. "github.com/webx-top/webx/lib/forms"
+	. "github.com/coscms/forms"
 )
 
 type Test struct {
