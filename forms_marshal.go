@@ -1,8 +1,9 @@
 package forms
 
 import (
-	"encoding/json"
 	"encoding/xml"
+
+	"github.com/webx-top/com/encoding/json"
 )
 
 func NewForms(f *Form) *Forms {
