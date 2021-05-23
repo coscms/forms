@@ -509,7 +509,7 @@ func (form *Form) parseElement(ele *conf.Element, typ reflect.Type, val reflect.
 	f.SetLabel(form.labelFn(ele.Label))
 	f.SetTmpl(ele.Template)
 	f.SetID(ele.ID)
-	if ele.Valid != `` {
+	if len(ele.Valid) > 0 {
 		form.validTagFn(ele.Valid, f)
 	}
 	return f
