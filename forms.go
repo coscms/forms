@@ -28,7 +28,6 @@ import (
 	"html/template"
 	"log"
 	"net/url"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -49,6 +48,14 @@ func NewWithConfig(c *conf.Config, args ...interface{}) *Form {
 	form := New()
 	form.Init(c, args...)
 	return form
+}
+
+func NewWithConfigFile(m interface{}, configJSONFile string) *Form {
+	config, err := Unmarshal(configJSONFile)
+	if err != nil {
+		panic(err)
+	}
+	return NewWithModelConfig(m, config)
 }
 
 func New() *Form {
@@ -111,7 +118,6 @@ func (f *Form) Debug(args ...bool) *Form {
 	} else {
 		f.debug = true
 	}
-
 	return f
 }
 
@@ -186,7 +192,7 @@ func (f *Form) ValidTagFunc() func(string, fields.FieldInterface) {
 	return f.validTagFn
 }
 
-func (f *Form) Init(c *conf.Config, args ...interface{}) *Form {
+func (f *Form) Init(c *conf.Config, model ...interface{}) *Form {
 	if c == nil {
 		c = &conf.Config{}
 	}
@@ -194,32 +200,26 @@ func (f *Form) Init(c *conf.Config, args ...interface{}) *Form {
 	if len(c.Theme) == 0 {
 		c.Theme = common.BASE
 	}
-
 	f.Style = c.Theme
-
 	if len(c.Template) == 0 {
 		c.Template = common.TmplDir(f.Style) + `/baseform.html`
-		//c.Template=common.TmplDir(f.Style) + `/allfields.html`
+		//c.Template = common.TmplDir(f.Style) + `/allfields.html`
 	}
-	tpf, err := filepath.Abs(c.Template)
-	if err != nil {
-		log.Println(err)
-	}
-
+	tpf := c.Template
 	tmpl, ok := common.CachedTemplate(tpf)
 	if !ok {
+		var err error
 		tmpl, err = common.ParseFiles(common.CreateUrl(c.Template))
 		if err != nil {
 			log.Println(err)
 		}
 		common.SetCachedTemplate(tpf, tmpl)
 	}
-
 	f.template = tmpl
 	f.Method = c.Method
 	f.Action = template.HTML(c.Action)
-	if len(args) > 0 {
-		f.Model = args[0]
+	if len(model) > 0 {
+		f.Model = model[0]
 	}
 	return f
 }
@@ -294,10 +294,10 @@ func (f *Form) SetModel(m interface{}) *Form {
 	return f
 }
 
-func (f *Form) ParseModel(args ...interface{}) *Form {
+func (f *Form) ParseModel(model ...interface{}) *Form {
 	var m interface{}
-	if len(args) > 0 {
-		m = args[0]
+	if len(model) > 0 {
+		m = model[0]
 	}
 	if m == nil {
 		m = f.Model
@@ -306,7 +306,7 @@ func (f *Form) ParseModel(args ...interface{}) *Form {
 	for _, v := range flist {
 		f.Elements(v.(conf.FormElement))
 	}
-	if fsort != "" {
+	if len(fsort) > 0 {
 		f.Sort(fsort)
 	}
 	return f
@@ -329,7 +329,7 @@ func (f *Form) AddButton(tmpl string, args ...string) *Form {
 			}
 		}
 	}
-	if tmpl == `` {
+	if len(tmpl) == 0 {
 		tmpl = `fieldset_buttons`
 	}
 	f.Elements(f.NewFieldSet("_button_group", "", btnFields...).SetTmpl(tmpl))

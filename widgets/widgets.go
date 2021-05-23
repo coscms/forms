@@ -41,7 +41,10 @@ type WidgetInterface interface {
 // Render executes the internal template and returns the result as a template.HTML object.
 func (w *Widget) Render(data interface{}) string {
 	buf := bytes.NewBuffer(nil)
-	w.template.ExecuteTemplate(buf, "main", data)
+	err := w.template.ExecuteTemplate(buf, "main", data)
+	if err != nil {
+		return err.Error()
+	}
 	return buf.String()
 }
 
