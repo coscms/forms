@@ -40,8 +40,7 @@ type WidgetInterface interface {
 
 // Render executes the internal template and returns the result as a template.HTML object.
 func (w *Widget) Render(data interface{}) string {
-	var s string
-	buf := bytes.NewBufferString(s)
+	buf := bytes.NewBuffer(nil)
 	w.template.ExecuteTemplate(buf, "main", data)
 	return buf.String()
 }
@@ -55,9 +54,9 @@ func BaseWidget(style, inputType, tmplName string) *Widget {
 			fpath = common.TmplDir(style) + "/" + style + "/"
 			urls  = []string{common.CreateUrl(fpath + "generic.tmpl")}
 			tpath = widgetTmpl(inputType, tmplName)
+			err   error
 		)
 		urls = append(urls, common.CreateUrl(fpath+tpath+".html"))
-		var err error
 		tmpl, err = common.ParseFiles(urls...)
 		if err != nil {
 			panic(err)

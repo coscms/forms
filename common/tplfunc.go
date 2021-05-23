@@ -21,6 +21,8 @@ package common
 
 import (
 	"html/template"
+	"io/fs"
+	"io/ioutil"
 	"path/filepath"
 
 	"github.com/webx-top/echo/middleware/tplfunc"
@@ -30,9 +32,12 @@ func TplFuncs() template.FuncMap {
 	return tplfunc.TplFuncMap
 }
 
-func ParseFiles(files ...string) (*template.Template,error) {
+func ParseFiles(files ...string) (*template.Template, error) {
+	if FileSystem != nil {
+		return ParseFS(FileSystem, files...)
+	}
 	name := filepath.Base(files[0])
-	b, err := FileReader(files[0])
+	b, err := ioutil.ReadFile(files[0])
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +45,27 @@ func ParseFiles(files ...string) (*template.Template,error) {
 	tmpl.Funcs(TplFuncs())
 	tmpl = template.Must(tmpl.Parse(string(b)))
 	if len(files) > 1 {
-		tmpl = template.Must(tmpl.ParseFiles(files[1:]...))
+		tmpl, err = tmpl.ParseFiles(files[1:]...)
 	}
-	return tmpl, nil
+	return tmpl, err
+}
+
+func ParseFS(fs fs.FS, files ...string) (*template.Template, error) {
+	name := filepath.Base(files[0])
+	tmpl := template.New(name)
+	tmpl.Funcs(TplFuncs())
+	fp, err := fs.Open(files[0])
+	if err != nil {
+		return tmpl, err
+	}
+	b, err := ioutil.ReadAll(fp)
+	fp.Close()
+	if err != nil {
+		return tmpl, err
+	}
+	tmpl = template.Must(tmpl.Parse(string(b)))
+	if len(files) > 1 {
+		tmpl, err = tmpl.ParseFS(fs, files[1:]...)
+	}
+	return tmpl, err
 }

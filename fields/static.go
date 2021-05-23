@@ -34,10 +34,11 @@ func StaticField(name, content string) *Field {
 
 // StaticFieldFromInstance creates and initializes a radio field based on its name, the reference object instance and field number.
 func StaticFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name string, useFieldValue bool) *Field {
+	var ret *Field
 	if useFieldValue {
-		ret := StaticField(name, fmt.Sprintf("%s", val.Field(fieldNo).Interface()))
-		return ret
+		ret = StaticField(name, fmt.Sprintf("%s", val.Field(fieldNo).Interface()))
+	} else {
+		ret = StaticField(name, common.TagVal(t, fieldNo, "form_value"))
 	}
-	ret := StaticField(name, common.TagVal(t, fieldNo, "form_value"))
 	return ret
 }

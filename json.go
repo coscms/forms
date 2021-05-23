@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"path/filepath"
 	"reflect"
@@ -29,32 +28,34 @@ import (
 
 	"github.com/webx-top/tagfast"
 
-	"github.com/webx-top/validation"
 	comm "github.com/coscms/forms/common"
 	conf "github.com/coscms/forms/config"
 	"github.com/coscms/forms/fields"
+	"github.com/webx-top/validation"
 )
 
-func Unmarshal(filename string) (r *conf.Config) {
+func Unmarshal(filename string) (r *conf.Config, err error) {
 	var ok bool
-	filename, _ = filepath.Abs(filename)
+	filename, err = filepath.Abs(filename)
+	if err != nil {
+		return
+	}
 	r, ok = comm.CachedConfig(filename)
 	if ok {
 		return
 	}
-	b, err := ioutil.ReadFile(filename)
+	var b []byte
+	b, err = ioutil.ReadFile(filename)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 	r = &conf.Config{}
 	err = json.Unmarshal(b, r)
 	if err != nil {
-		log.Println(err)
-	} else {
-		fmt.Println(`cache form config:`, filename)
-		comm.SetCachedConfig(filename, r)
+		return
 	}
+	fmt.Println(`cache form config:`, filename)
+	comm.SetCachedConfig(filename, r)
 	return
 }
 
@@ -64,22 +65,34 @@ func NewWithModelConfig(m interface{}, r *conf.Config) *Form {
 	return form
 }
 
-func (form *Form) Generate(m interface{}, jsonFile string) *Form {
-	r := Unmarshal(jsonFile)
+func (form *Form) Generate(m interface{}, jsonFile string) error {
+	r, err := Unmarshal(jsonFile)
+	if err != nil {
+		return err
+	}
 	form.Init(r).SetModel(m)
-	return form.ParseFromConfig()
+	form.ParseFromConfig()
+	return nil
 }
 
-func (form *Form) ParseFromJson(jsonFile string) *Form {
-	r := Unmarshal(jsonFile)
+func (form *Form) ParseFromJson(jsonFile string) error {
+	r, err := Unmarshal(jsonFile)
+	if err != nil {
+		return err
+	}
 	form.Init(r)
-	return form.ParseFromConfig()
+	form.ParseFromConfig()
+	return nil
 }
 
-func (form *Form) ValidFromJson(jsonFile string) *Form {
-	r := Unmarshal(jsonFile)
+func (form *Form) ValidFromJson(jsonFile string) error {
+	r, err := Unmarshal(jsonFile)
+	if err != nil {
+		return err
+	}
 	form.Init(r)
-	return form.ValidFromConfig()
+	form.ValidFromConfig()
+	return nil
 }
 
 func (form *Form) ValidFromConfig() *Form {
@@ -208,7 +221,7 @@ func (form *Form) ParseFromConfig(insertErrors ...bool) *Form {
 			}
 		}
 	}
-	if r.ID != `` {
+	if len(r.ID) > 0 {
 		form.SetID(r.ID)
 	}
 	if r.WithButtons {

@@ -33,10 +33,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/webx-top/validation"
 	"github.com/coscms/forms/common"
 	conf "github.com/coscms/forms/config"
 	"github.com/coscms/forms/fields"
+	"github.com/webx-top/validation"
 )
 
 // Form methods: POST or GET.
@@ -53,7 +53,7 @@ func NewWithConfig(c *conf.Config, args ...interface{}) *Form {
 
 func New() *Form {
 	return &Form{
-		FieldList:             make([]conf.FormElement, 0),
+		FieldList:             []conf.FormElement{},
 		FieldMap:              make(map[string]int),
 		ContainerMap:          make(map[string]string),
 		Style:                 common.BASE,
@@ -370,10 +370,12 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 		t = t.Elem()
 		v = v.Elem()
 	}
-	var fieldList []interface{}
-	fieldSort := ""
-	fieldSetList := make(map[string]*FieldSetType, 0)
-	fieldSetSort := make(map[string]string, 0)
+	var (
+		fieldList []interface{}
+		fieldSort string
+	)
+	fieldSetList := map[string]*FieldSetType{}
+	fieldSetSort := map[string]string{}
 	for i := 0; i < t.NumField(); i++ {
 		options := make(map[string]struct{})
 		tag, tagf := common.Tag(t, t.Field(i), "form_options")
@@ -580,7 +582,7 @@ func (f *Form) runBefore() {
 	}
 }
 
-func (f *Form) dataForRender() string {
+func (f *Form) render() string {
 	f.runBefore()
 	buf := bytes.NewBuffer(nil)
 	err := f.template.Execute(buf, f.Data())
@@ -593,7 +595,7 @@ func (f *Form) dataForRender() string {
 // Render executes the internal template and renders the form, returning the result as a template.HTML object embeddable
 // in any other template.
 func (f *Form) Render() template.HTML {
-	return template.HTML(f.dataForRender())
+	return template.HTML(f.render())
 }
 
 func (f *Form) Html(value interface{}) template.HTML {
@@ -601,19 +603,21 @@ func (f *Form) Html(value interface{}) template.HTML {
 }
 
 func (f *Form) String() string {
-	return f.dataForRender()
+	return f.render()
 }
 
 // Elements adds the provided elements to the form.
 func (f *Form) Elements(elems ...conf.FormElement) {
 	for _, e := range elems {
 		t := reflect.TypeOf(e)
-		switch {
-		case t.Implements(reflect.TypeOf((*fields.FieldInterface)(nil)).Elem()):
+		if t.Implements(reflect.TypeOf((*fields.FieldInterface)(nil)).Elem()) {
 			f.addField(e.(fields.FieldInterface))
-		case reflect.ValueOf(e).Type().String() == "*forms.FieldSetType":
+			continue
+		}
+		switch reflect.ValueOf(e).Type().String() {
+		case "*forms.FieldSetType":
 			f.addFieldSet(e.(*FieldSetType))
-		case reflect.ValueOf(e).Type().String() == "*forms.LangSetType":
+		case "*forms.LangSetType":
 			f.addLangSet(e.(*LangSetType))
 		}
 	}

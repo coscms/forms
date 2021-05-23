@@ -34,12 +34,13 @@ const (
 
 func ConvertTime(v interface{}) (time.Time, bool) {
 	t, ok := v.(time.Time)
-	isEmpty := false
+	var isEmpty bool
 	if !ok {
 		var timestamp int64
-		if i, y := v.(int); y {
+		switch i := v.(type) {
+		case int:
 			timestamp = int64(i)
-		} else if i, y := v.(int64); y {
+		case int64:
 			timestamp = i
 		}
 		if timestamp > 0 {
@@ -53,20 +54,17 @@ func ConvertTime(v interface{}) (time.Time, bool) {
 
 // DatetimeField creates a default datetime input field with the given name.
 func DatetimeField(name string) *Field {
-	ret := FieldWithType(name, common.DATETIME)
-	return ret
+	return FieldWithType(name, common.DATETIME)
 }
 
 // DateField creates a default date input field with the given name.
 func DateField(name string) *Field {
-	ret := FieldWithType(name, common.DATE)
-	return ret
+	return FieldWithType(name, common.DATE)
 }
 
 // TimeField creates a default time input field with the given name.
 func TimeField(name string) *Field {
-	ret := FieldWithType(name, common.TIME)
-	return ret
+	return FieldWithType(name, common.TIME)
 }
 
 // DatetimeFieldFromInstance creates and initializes a datetime field based on its name, the reference object instance and field number.
@@ -175,32 +173,20 @@ func TimeFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name 
 
 func validateDateformat(v string, format string) bool {
 	_, err := time.Parse(format, v)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func validateDatetime(v string) bool {
 	_, err := time.Parse(DATETIME_FORMAT, v)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func validateDate(v string) bool {
 	_, err := time.Parse(DATE_FORMAT, v)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func validateTime(v string) bool {
 	_, err := time.Parse(TIME_FORMAT, v)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

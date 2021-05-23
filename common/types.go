@@ -20,12 +20,12 @@ package common
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
-	"io/ioutil"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 
 	"github.com/coscms/forms/config"
@@ -39,11 +39,14 @@ const (
 )
 
 var (
-	tmplDirs = map[string]string{BASE: "templates", BOOTSTRAP: "templates"}
-	LabelFn  = func(s string) string {
+	tmplDirs = map[string]string{
+		BASE:      "templates",
+		BOOTSTRAP: "templates",
+	}
+	LabelFn = func(s string) string {
 		return s
 	}
-	FileReader = ioutil.ReadFile
+	FileSystem fs.FS
 
 	//private
 	cachedTemplate = make(map[string]*template.Template)
@@ -86,7 +89,9 @@ const (
 )
 
 func SetTmplDir(style, tmplDir string) {
+	lock.Lock()
 	tmplDirs[style] = tmplDir
+	lock.Unlock()
 }
 
 func TmplDir(style string) (tmplDir string) {
@@ -96,6 +101,16 @@ func TmplDir(style string) (tmplDir string) {
 
 // CreateUrl creates the complete url of the desired widget template
 func CreateUrl(widget string) string {
+	if FileSystem != nil {
+		fp, err := FileSystem.Open(widget)
+		if err == nil {
+			defer fp.Close()
+			fi, err := fp.Stat()
+			if err == nil && !fi.IsDir() {
+				return widget
+			}
+		}
+	}
 	if !TmplExists(widget) {
 		return filepath.Join(os.Getenv("GOPATH"), "src", PACKAGE_NAME, widget)
 	}
@@ -109,25 +124,27 @@ func TmplExists(tmpl string) bool {
 
 func CachedTemplate(cachedKey string) (r *template.Template, ok bool) {
 	lock.RLock()
-	defer lock.RUnlock()
-
 	r, ok = cachedTemplate[cachedKey]
+	lock.RUnlock()
 	return
 }
 
 func SetCachedTemplate(cachedKey string, tmpl *template.Template) bool {
 	lock.Lock()
-	defer lock.Unlock()
-
 	cachedTemplate[cachedKey] = tmpl
+	lock.Unlock()
 	return true
 }
 
 func ClearCachedTemplate() {
+	lock.Lock()
 	cachedTemplate = make(map[string]*template.Template)
+	lock.Unlock()
 }
 
 func DelCachedTemplate(key string) bool {
+	lock.Lock()
+	defer lock.Unlock()
 	if _, ok := cachedTemplate[key]; ok {
 		delete(cachedTemplate, key)
 		return true
@@ -137,25 +154,27 @@ func DelCachedTemplate(key string) bool {
 
 func CachedConfig(cachedKey string) (r *config.Config, ok bool) {
 	lock.RLock()
-	defer lock.RUnlock()
-
 	r, ok = cachedConfig[cachedKey]
+	lock.RUnlock()
 	return
 }
 
 func SetCachedConfig(cachedKey string, c *config.Config) bool {
 	lock.Lock()
-	defer lock.Unlock()
-
 	cachedConfig[cachedKey] = c
+	lock.Unlock()
 	return true
 }
 
 func ClearCachedConfig() {
+	lock.Lock()
 	cachedConfig = make(map[string]*config.Config)
+	lock.Unlock()
 }
 
 func DelCachedConfig(key string) bool {
+	lock.Lock()
+	defer lock.Unlock()
 	if _, ok := cachedConfig[key]; ok {
 		delete(cachedConfig, key)
 		return true
@@ -163,29 +182,38 @@ func DelCachedConfig(key string) bool {
 	return false
 }
 
-func ParseTmpl(data interface{}, fn_tpl template.FuncMap, fn_fixTpl func(tpls ...string) ([]string, error), tpls ...string) string {
-	var s string
-	buf := bytes.NewBufferString(s)
-	tpf := fmt.Sprintf("%v", tpls)
+func ParseTmpl(data interface{},
+	fn_tpl template.FuncMap,
+	fn_fixTpl func(tpls ...string) ([]string, error),
+	tpls ...string) string {
+	buf := bytes.NewBuffer(nil)
+	tpf := strings.Join(tpls, `|`)
 	tpl, ok := CachedTemplate(tpf)
 	if !ok {
 		c := template.New(filepath.Base(tpls[0]))
 		if fn_tpl != nil {
 			c.Funcs(fn_tpl)
 		}
+		var err error
 		if fn_fixTpl != nil {
-			var err error
 			tpls, err = fn_fixTpl(tpls...)
 			if err != nil {
-				return fmt.Sprintf(`%v`, err)
+				return err.Error()
 			}
 		}
-		tpl = template.Must(c.ParseFiles(tpls...))
+		if FileSystem != nil {
+			tpl, err = c.ParseFS(FileSystem, tpls...)
+		} else {
+			tpl, err = c.ParseFiles(tpls...)
+		}
+		if err != nil {
+			return err.Error()
+		}
 		SetCachedTemplate(tpf, tpl)
 	}
 	err := tpl.Execute(buf, data)
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 	return buf.String()
 }

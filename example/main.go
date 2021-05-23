@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	. "github.com/coscms/forms"
@@ -15,7 +16,10 @@ type Test struct {
 func main() {
 	//1.===================================
 	startTime := time.Now()
-	config := Unmarshal(`forms.json`)
+	config, err := Unmarshal(`forms.json`)
+	if err != nil {
+		log.Println(err)
+	}
 	t := Test{
 		User:     `webx`,
 		Birthday: `1985`,
@@ -37,6 +41,7 @@ func main() {
 	//3.===================================
 	startTime = time.Now()
 	form = New()
-	fmt.Println(form.Generate(t, `forms.json`))
+	form.Generate(t, `forms.json`)
+	fmt.Println(form)
 	fmt.Println(`3.________________________________________CostTime:`, time.Now().Sub(startTime).Seconds(), `s`)
 }

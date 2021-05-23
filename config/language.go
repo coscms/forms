@@ -38,7 +38,7 @@ type Language struct {
 }
 
 func (l *Language) Name(name string) string {
-	if l.NameFormat == `` {
+	if len(l.NameFormat) == 0 {
 		return name
 	}
 	if l.NameFormat == `~` {
@@ -48,17 +48,17 @@ func (l *Language) Name(name string) string {
 }
 
 func (l *Language) HasName(name string) bool {
-	_, ok := l.fieldMap[name]
-	if ok {
-		return true
+	if l.fieldMap == nil {
+		return false
 	}
-	return false
+	_, ok := l.fieldMap[name]
+	return ok
 }
 
 func (l *Language) AddField(f ...FormElement) {
-	if l.fields == nil {
-		l.fields = make([]FormElement, 0)
-		l.fieldMap = make(map[string]int)
+	if l.fieldMap == nil {
+		l.fieldMap = map[string]int{}
+		l.fields = []FormElement{}
 	}
 	for _, field := range f {
 		name := l.Name(field.OriginalName())
@@ -71,7 +71,7 @@ func (l *Language) AddField(f ...FormElement) {
 }
 
 func (l *Language) Field(name string) FormElement {
-	if l.fields == nil {
+	if l.fieldMap == nil {
 		return nil
 	}
 	if idx, ok := l.fieldMap[l.Name(name)]; ok {

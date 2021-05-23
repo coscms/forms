@@ -19,7 +19,6 @@ package forms
 
 import (
 	"bytes"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -105,14 +104,10 @@ func (f *LangSetType) Data() map[string]interface{} {
 	return f.data
 }
 
-func (f *LangSetType) dataForRender() string {
-	buf := bytes.NewBufferString("")
+func (f *LangSetType) render() string {
+	buf := bytes.NewBuffer(nil)
 	tpf := common.TmplDir(f.FormStyle) + "/" + f.FormStyle + "/" + f.Tmpl + ".html"
 	var err error
-	tpf, err = filepath.Abs(tpf)
-	if err != nil {
-		return err.Error()
-	}
 	tpl, ok := common.CachedTemplate(tpf)
 	if !ok {
 		tpl, err = common.ParseFiles(common.CreateUrl(tpf))
@@ -130,11 +125,11 @@ func (f *LangSetType) dataForRender() string {
 
 // Render translates a FieldSetType into HTML code and returns it as a template.HTML object.
 func (f *LangSetType) Render() template.HTML {
-	return template.HTML(f.dataForRender())
+	return template.HTML(f.render())
 }
 
 func (f *LangSetType) String() string {
-	return f.dataForRender()
+	return f.render()
 }
 
 func (f *LangSetType) SetTmpl(tmpl string) *LangSetType {
