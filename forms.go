@@ -224,23 +224,23 @@ func (f *Form) Init(c *conf.Config, model ...interface{}) *Form {
 	return f
 }
 
-func (f *Form) Valid(args ...string) (valid *validation.Validation, passed bool) {
-	valid = f.Validate()
+func (f *Form) Valid(onlyCheckFields ...string) error {
 	if f.Model == nil {
-		return
+		return nil
 	}
-	var err error
-	passed, err = valid.Valid(f.Model, args...)
+	passed, err := f.Validate().Valid(f.Model, onlyCheckFields...)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	if !passed { // validation does not pass
-		for field, err := range valid.ErrorsMap {
-			f.Field(field).AddError(f.labelFn(err.Message))
+		for index, validErr := range f.Validate().Errors {
+			if index == 0 {
+				err = validErr
+			}
+			f.Field(validErr.Field).AddError(f.labelFn(validErr.Message))
 		}
 	}
-	return
+	return err
 }
 
 func (f *Form) InsertErrors() *Form {

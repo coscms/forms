@@ -22,8 +22,8 @@ import (
 	"html/template"
 	"strings"
 
-	"github.com/webx-top/validation"
 	"github.com/coscms/forms/fields"
+	"github.com/webx-top/validation"
 )
 
 func ValidationEngine(valid string, f fields.FieldInterface) {
@@ -81,7 +81,7 @@ func ValidationEngine(valid string, f fields.FieldInterface) {
 			validClass += ",custom[zip]"
 		}
 	}
-	if validClass != "" {
+	if len(validClass) > 0 {
 		validClass = strings.TrimPrefix(validClass, ",")
 		validClass = "validate[" + validClass + "]"
 		f.AddClass(validClass)
