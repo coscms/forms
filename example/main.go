@@ -6,6 +6,7 @@ import (
 	"time"
 
 	. "github.com/coscms/forms"
+	_ "github.com/coscms/forms/defaults"
 )
 
 type Test struct {
