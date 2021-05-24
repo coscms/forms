@@ -377,6 +377,9 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 	fieldSetList := map[string]*FieldSetType{}
 	fieldSetSort := map[string]string{}
 	for i := 0; i < t.NumField(); i++ {
+		if !v.Field(i).CanInterface() {
+			continue
+		}
 		options := make(map[string]struct{})
 		tag, tagf := common.Tag(t, t.Field(i), "form_options")
 		if len(tag) > 0 {
@@ -393,57 +396,72 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 				}
 			}
 		}
-		if _, ok := options["-"]; !ok {
-			widget := common.TagVal(t, i, "form_widget")
-			var f fields.FieldInterface
-			var fName string
-			if len(baseName) == 0 {
-				fName = t.Field(i).Name
-			} else {
-				fName = strings.Join([]string{baseName, t.Field(i).Name}, ".")
-			}
-			useFieldValue := form.IsOmit(fName) == false
-			//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
-			switch widget {
-			case "color", "email", "file", "image", "month", "search", "tel", "url", "week":
-				f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue, widget)
-			case "text":
+		if _, ok := options["-"]; ok {
+			continue
+		}
+		widget := common.TagVal(t, i, "form_widget")
+		var f fields.FieldInterface
+		var fName string
+		if len(baseName) == 0 {
+			fName = t.Field(i).Name
+		} else {
+			fName = strings.Join([]string{baseName, t.Field(i).Name}, ".")
+		}
+		useFieldValue := !form.IsOmit(fName)
+		//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
+		switch widget {
+		case "color", "email", "file", "image", "month", "search", "tel", "url", "week":
+			f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue, widget)
+		case "text":
+			f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "hidden":
+			f = fields.HiddenFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "textarea":
+			f = fields.TextAreaFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "password":
+			f = fields.PasswordFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "select":
+			f = fields.SelectFieldFromInstance(v, t, i, fName, useFieldValue, options, form.labelFn)
+		case "date":
+			f = fields.DateFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "datetime":
+			f = fields.DatetimeFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "time":
+			f = fields.TimeFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "number":
+			f = fields.NumberFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "range":
+			f = fields.RangeFieldFromInstance(v, t, i, fName, useFieldValue)
+		case "radio":
+			f = fields.RadioFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
+		case "checkbox":
+			f = fields.CheckboxFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
+		case "static":
+			f = fields.StaticFieldFromInstance(v, t, i, fName, useFieldValue)
+		default:
+			switch t.Field(i).Type.String() {
+			case "string":
 				f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "hidden":
-				f = fields.HiddenFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "textarea":
-				f = fields.TextAreaFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "password":
-				f = fields.PasswordFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "select":
-				f = fields.SelectFieldFromInstance(v, t, i, fName, useFieldValue, options, form.labelFn)
-			case "date":
-				f = fields.DateFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "datetime":
+			case "bool":
+				f = fields.CheckboxFromInstance(v, t, i, fName, useFieldValue, options)
+			case "time.Time":
 				f = fields.DatetimeFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "time":
-				f = fields.TimeFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "number":
+			case "int", "int64", "float", "float32", "float64":
 				f = fields.NumberFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "range":
-				f = fields.RangeFieldFromInstance(v, t, i, fName, useFieldValue)
-			case "radio":
-				f = fields.RadioFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
-			case "checkbox":
-				f = fields.CheckboxFieldFromInstance(v, t, i, fName, useFieldValue, form.labelFn)
-			case "static":
-				f = fields.StaticFieldFromInstance(v, t, i, fName, useFieldValue)
+			case "struct":
+				fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
+				if len(fs) > 0 {
+					if len(fieldSort) == 0 {
+						fieldSort = fs
+					} else {
+						fieldSort += "," + fs
+					}
+				}
+				fieldList = append(fieldList, fl...)
+				f = nil
 			default:
-				switch t.Field(i).Type.String() {
-				case "string":
-					f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
-				case "bool":
-					f = fields.CheckboxFromInstance(v, t, i, fName, useFieldValue, options)
-				case "time.Time":
-					f = fields.DatetimeFieldFromInstance(v, t, i, fName, useFieldValue)
-				case "int", "int64", "float", "float32", "float64":
-					f = fields.NumberFieldFromInstance(v, t, i, fName, useFieldValue)
-				case "struct":
+				if t.Field(i).Type.Kind() == reflect.Struct ||
+					(t.Field(i).Type.Kind() == reflect.Ptr && t.Field(i).Type.Elem().Kind() == reflect.Struct) {
 					fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
 					if len(fs) > 0 {
 						if len(fieldSort) == 0 {
@@ -454,83 +472,69 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 					}
 					fieldList = append(fieldList, fl...)
 					f = nil
-				default:
-					if t.Field(i).Type.Kind() == reflect.Struct ||
-						(t.Field(i).Type.Kind() == reflect.Ptr && t.Field(i).Type.Elem().Kind() == reflect.Struct) {
-						fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
-						if len(fs) > 0 {
-							if len(fieldSort) == 0 {
-								fieldSort = fs
-							} else {
-								fieldSort += "," + fs
-							}
-						}
-						fieldList = append(fieldList, fl...)
-						f = nil
-					} else {
-						f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
-					}
+				} else {
+					f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue)
 				}
 			}
-			if f != nil {
-				label := common.TagVal(t, i, "form_label")
-				if len(label) == 0 {
-					label = strings.Title(t.Field(i).Name)
-				}
-				label = form.labelFn(label)
-				f.SetLabel(label)
+		}
+		if f != nil {
+			label := common.TagVal(t, i, "form_label")
+			if len(label) == 0 {
+				label = strings.Title(t.Field(i).Name)
+			}
+			label = form.labelFn(label)
+			f.SetLabel(label)
 
-				params := common.TagVal(t, i, "form_params")
-				if len(params) > 0 {
-					if paramsMap, err := url.ParseQuery(params); err == nil {
-						for k, v := range paramsMap {
-							if k == "placeholder" || k == "title" {
-								v[0] = form.labelFn(v[0])
-							}
-							f.SetParam(k, v[0])
+			params := common.TagVal(t, i, "form_params")
+			if len(params) > 0 {
+				if paramsMap, err := url.ParseQuery(params); err == nil {
+					for k, v := range paramsMap {
+						if k == "placeholder" || k == "title" {
+							v[0] = form.labelFn(v[0])
 						}
-					} else {
-						fmt.Println(err)
-					}
-				}
-				valid := common.TagVal(t, i, "valid")
-				if len(valid) > 0 {
-					form.validTagFn(valid, f)
-				}
-				fieldsetLabel := common.TagVal(t, i, "form_fieldset")
-				fieldsort := common.TagVal(t, i, "form_sort")
-				if len(fieldsetLabel) > 0 {
-					fieldsets := strings.SplitN(fieldsetLabel, ";", 2)
-					fieldsetName := ""
-					switch len(fieldsets) {
-					case 1:
-						fieldsetName = fieldsets[0]
-					case 2:
-						fieldsetLabel = fieldsets[0]
-						fieldsetName = fieldsets[1]
-					}
-					fieldsetLabel = form.labelFn(fieldsetLabel)
-					f.SetData("container", "fieldset")
-					if _, ok := fieldSetList[fieldsetName]; !ok {
-						fieldSetList[fieldsetName] = form.NewFieldSet(fieldsetName, fieldsetLabel, f)
-					} else {
-						fieldSetList[fieldsetName].Elements(f)
-					}
-					if len(fieldsort) > 0 {
-						if _, ok := fieldSetSort[fieldsetName]; !ok {
-							fieldSetSort[fieldsetName] = fName + ":" + fieldsort
-						} else {
-							fieldSetSort[fieldsetName] += "," + fName + ":" + fieldsort
-						}
+						f.SetParam(k, v[0])
 					}
 				} else {
-					fieldList = append(fieldList, f)
-					if len(fieldsort) > 0 {
-						if len(fieldSort) == 0 {
-							fieldSort = fName + ":" + fieldsort
-						} else {
-							fieldSort += "," + fName + ":" + fieldsort
-						}
+					fmt.Println(err)
+				}
+			}
+			valid := common.TagVal(t, i, "valid")
+			if len(valid) > 0 {
+				form.validTagFn(valid, f)
+			}
+			fieldsetLabel := common.TagVal(t, i, "form_fieldset")
+			fieldsort := common.TagVal(t, i, "form_sort")
+			if len(fieldsetLabel) > 0 {
+				fieldsets := strings.SplitN(fieldsetLabel, ";", 2)
+				var fieldsetName string
+				switch len(fieldsets) {
+				case 1:
+					fieldsetName = fieldsets[0]
+				case 2:
+					fieldsetLabel = fieldsets[0]
+					fieldsetName = fieldsets[1]
+				}
+				fieldsetLabel = form.labelFn(fieldsetLabel)
+				f.SetData("container", "fieldset")
+				if _, ok := fieldSetList[fieldsetName]; !ok {
+					fieldSetList[fieldsetName] = form.NewFieldSet(fieldsetName, fieldsetLabel, f)
+				} else {
+					fieldSetList[fieldsetName].Elements(f)
+				}
+				if len(fieldsort) > 0 {
+					if _, ok := fieldSetSort[fieldsetName]; !ok {
+						fieldSetSort[fieldsetName] = fName + ":" + fieldsort
+					} else {
+						fieldSetSort[fieldsetName] += "," + fName + ":" + fieldsort
+					}
+				}
+			} else {
+				fieldList = append(fieldList, f)
+				if len(fieldsort) > 0 {
+					if len(fieldSort) == 0 {
+						fieldSort = fName + ":" + fieldsort
+					} else {
+						fieldSort += "," + fName + ":" + fieldsort
 					}
 				}
 			}
