@@ -35,7 +35,7 @@ import (
 	"github.com/webx-top/validation"
 )
 
-func Unmarshal(filename string) (r *conf.Config, err error) {
+func UnmarshalFile(filename string) (r *conf.Config, err error) {
 	var ok bool
 	filename, err = filepath.Abs(filename)
 	if err != nil {
@@ -60,6 +60,22 @@ func Unmarshal(filename string) (r *conf.Config, err error) {
 	return
 }
 
+func Unmarshal(b []byte, key string) (r *conf.Config, err error) {
+	var ok bool
+	r, ok = comm.CachedConfig(key)
+	if ok {
+		return
+	}
+	r = &conf.Config{}
+	err = json.Unmarshal(b, r)
+	if err != nil {
+		return
+	}
+	fmt.Println(`cache form config:`, key)
+	comm.SetCachedConfig(key, r)
+	return
+}
+
 func NewWithModelConfig(m interface{}, r *conf.Config) *Form {
 	form := NewWithConfig(r)
 	form.SetModel(m).ParseFromConfig()
@@ -67,7 +83,7 @@ func NewWithModelConfig(m interface{}, r *conf.Config) *Form {
 }
 
 func (form *Form) Generate(m interface{}, jsonFile string) error {
-	r, err := Unmarshal(jsonFile)
+	r, err := UnmarshalFile(jsonFile)
 	if err != nil {
 		return err
 	}
@@ -76,8 +92,8 @@ func (form *Form) Generate(m interface{}, jsonFile string) error {
 	return nil
 }
 
-func (form *Form) ParseFromJson(jsonFile string) error {
-	r, err := Unmarshal(jsonFile)
+func (form *Form) ParseFromJSONFile(jsonFile string) error {
+	r, err := UnmarshalFile(jsonFile)
 	if err != nil {
 		return err
 	}
@@ -86,8 +102,28 @@ func (form *Form) ParseFromJson(jsonFile string) error {
 	return nil
 }
 
-func (form *Form) ValidFromJson(jsonFile string) error {
-	r, err := Unmarshal(jsonFile)
+func (form *Form) ParseFromJSON(b []byte, key string) error {
+	r, err := Unmarshal(b, key)
+	if err != nil {
+		return err
+	}
+	form.Init(r)
+	form.ParseFromConfig()
+	return nil
+}
+
+func (form *Form) ValidFromJSONFile(jsonFile string) error {
+	r, err := UnmarshalFile(jsonFile)
+	if err != nil {
+		return err
+	}
+	form.Init(r)
+	form.ValidFromConfig()
+	return nil
+}
+
+func (form *Form) ValidFromJSON(b []byte, key string) error {
+	r, err := Unmarshal(b, key)
 	if err != nil {
 		return err
 	}
