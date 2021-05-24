@@ -516,7 +516,7 @@ func (form *Form) parseElement(ele *conf.Element, typ reflect.Type, val reflect.
 }
 
 func (form *Form) validElement(ele *conf.Element, typ reflect.Type, val reflect.Value) bool {
-	if ele.Valid == `` {
+	if len(ele.Valid) == 0 {
 		return true
 	}
 	parts := strings.Split(ele.Name, `.`)
@@ -564,7 +564,8 @@ func (form *Form) ToConfig() *conf.Config {
 	form.ParseModel()
 	for _, v := range form.FieldList {
 		var element *conf.Element
-		if f, ok := v.(*FieldSetType); ok {
+		switch f := v.(type) {
+		case *FieldSetType:
 			element = &conf.Element{
 				ID:         ``,
 				Type:       `fieldset`,
@@ -578,13 +579,13 @@ func (form *Form) ToConfig() *conf.Config {
 				Choices:    make([]*conf.Choice, 0),
 				Elements:   make([]*conf.Element, 0),
 			}
-			temp := ``
-			join := ``
+			var temp string
+			var join string
 			for c := range f.Class {
 				temp += join + c
 				join = ` `
 			}
-			if temp != `` {
+			if len(temp) > 0 {
 				element.Attributes = append(element.Attributes, []string{`class`, temp})
 				temp = ``
 				join = ``
@@ -595,7 +596,7 @@ func (form *Form) ToConfig() *conf.Config {
 			for _, ff := range f.FieldList {
 				element.Elements = append(element.Elements, ff.Element())
 			}
-		} else if f, ok := v.(fields.FieldInterface); ok {
+		case fields.FieldInterface:
 			element = f.Element()
 		}
 		if element != nil {
