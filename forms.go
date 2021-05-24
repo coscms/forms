@@ -51,7 +51,7 @@ func NewWithConfig(c *conf.Config, args ...interface{}) *Form {
 }
 
 func NewWithConfigFile(m interface{}, configJSONFile string) *Form {
-	config, err := Unmarshal(configJSONFile)
+	config, err := UnmarshalFile(configJSONFile)
 	if err != nil {
 		panic(err)
 	}

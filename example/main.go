@@ -16,7 +16,7 @@ type Test struct {
 func main() {
 	//1.===================================
 	startTime := time.Now()
-	config, err := Unmarshal(`forms.json`)
+	config, err := UnmarshalFile(`forms.json`)
 	if err != nil {
 		log.Println(err)
 	}
@@ -27,7 +27,7 @@ func main() {
 	form := NewWithModelConfig(t, config)
 	fmt.Println(form.Render())
 	//return
-	fmt.Println(`1.________________________________________CostTime:`, time.Now().Sub(startTime).Seconds(), `s`)
+	fmt.Println(`1.________________________________________CostTime:`, time.Since(startTime).Seconds(), `s`)
 	fmt.Println(``)
 
 	//2.===================================
@@ -35,7 +35,7 @@ func main() {
 	form = New()
 	fmt.Println(form.Init(config, t).ValidFromConfig().ParseFromConfig(true))
 
-	fmt.Println(`2.________________________________________CostTime:`, time.Now().Sub(startTime).Seconds(), `s`)
+	fmt.Println(`2.________________________________________CostTime:`, time.Since(startTime).Seconds(), `s`)
 	fmt.Println(``)
 
 	//3.===================================
@@ -43,5 +43,5 @@ func main() {
 	form = New()
 	form.Generate(t, `forms.json`)
 	fmt.Println(form)
-	fmt.Println(`3.________________________________________CostTime:`, time.Now().Sub(startTime).Seconds(), `s`)
+	fmt.Println(`3.________________________________________CostTime:`, time.Since(startTime).Seconds(), `s`)
 }
