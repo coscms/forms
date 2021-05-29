@@ -538,6 +538,9 @@ func (form *Form) parseElement(ele *conf.Element, typ reflect.Type, val reflect.
 	if len(ele.Valid) > 0 {
 		form.validTagFn(ele.Valid, f)
 	}
+	for key, val := range ele.Data {
+		f.SetData(key, val)
+	}
 	return f
 }
 
