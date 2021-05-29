@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -14,6 +15,21 @@ type Test struct {
 	Birthday string
 }
 
+var expected = []string{
+	"user",
+	"user1",
+	"user2",
+	"birthday",
+	"Language[en][title]",
+	"Language[zh-CN][title]",
+	"Language[en][content]",
+	"Language[zh-CN][content]",
+	"Language[en][meta_title]",
+	"Language[zh-CN][meta_title]",
+	"Language[en][meta_kewwords]",
+	"Language[zh-CN][meta_kewwords]",
+}
+
 func main() {
 	//1.===================================
 	startTime := time.Now()
@@ -24,6 +40,13 @@ func main() {
 	t := Test{
 		User:     `webx`,
 		Birthday: `1985`,
+	}
+	b, _ := json.MarshalIndent(config.GetNames(), ``, " ")
+	println(string(b))
+	for _, name := range expected {
+		if !config.HasName(name) {
+			panic(`not found "` + name + `"`)
+		}
 	}
 	form := NewWithModelConfig(t, config)
 	fmt.Println(form.Render())

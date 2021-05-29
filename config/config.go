@@ -38,34 +38,40 @@ func (c *Config) Clone() *Config {
 }
 
 func (c *Config) HasName(name string) bool {
-	if c.hasNameInElements(name, c.Elements) {
-		return true
-	}
-	return c.hasNameInLanguages(name)
+	return c.hasName(name, c.Elements, c.Languages)
 }
 
-func (c *Config) hasNameInElements(name string, elements []*Element) bool {
+func (c *Config) hasName(name string, elements []*Element, languages []*Language) bool {
 	for _, elem := range elements {
 		if elem.Name == name {
 			return elem.Type != `langset` && elem.Type != `fieldset`
 		}
 		if elem.Type == `langset` {
+			if c.hasName(name, elem.Elements, elem.Languages) {
+				return true
+			}
 			continue
 		}
-		if c.hasNameInElements(name, elem.Elements) {
-			return true
+		if elem.Type == `fieldset` {
+			if c.hasName(name, elem.Elements, languages) {
+				return true
+			}
+			continue
+		}
+		if len(languages) == 0 {
+			continue
+		}
+		for _, lang := range languages {
+			if lang.HasName(name) || name == lang.Name(elem.Name) {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func (c *Config) hasNameInLanguages(name string) bool {
-	for _, lang := range c.Languages {
-		if lang.HasName(name) {
-			return true
-		}
-	}
-	return false
+func (c *Config) GetNames() []string {
+	return getNames(c.Elements, c.Languages)
 }
 
 type Element struct {
