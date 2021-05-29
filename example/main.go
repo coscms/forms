@@ -68,4 +68,7 @@ func main() {
 	form.Generate(t, `forms.json`)
 	fmt.Println(form)
 	fmt.Println(`3.________________________________________CostTime:`, time.Since(startTime).Seconds(), `s`)
+
+	b, _ = json.MarshalIndent(form, ``, " ")
+	println(string(b))
 }
