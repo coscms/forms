@@ -564,6 +564,8 @@ func (f *Field) Element() *config.Element {
 		Type:       f.Type,
 		Name:       f.CurrName,
 		Label:      f.Label,
+		LabelCols:  f.LabelCols,
+		FieldCols:  f.FieldCols,
 		Value:      f.Value,
 		HelpText:   f.Helptext,
 		Template:   f.Tmpl,
