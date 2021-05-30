@@ -1,6 +1,6 @@
-{{- define "main" -}}
-{{- if .label -}}
+{{- define "main" }}
+{{- if .label }}
 <label{{ if .labelClasses }} class="{{.labelClasses}}"{{end}}{{if .id}} for="{{.id}}"{{end}}>{{.label}}</label>
-{{- end -}}
+{{- end }}
 <p name="{{.name}}"{{ if .classes }} class="{{.classes}}"{{end}}{{if .id}} id="{{.id}}"{{end}}{{if .params}}{{range $k, $v := .params}} {{$k}}="{{$v}}"{{end}}{{end}}{{if .css}} style="{{range $k, $v := .css}}{{$k}}: {{$v}}; {{end}}"{{end}}{{range .tags}} {{.}}{{end}}>{{.text}}</p>
-{{- end -}}
+{{- end }}

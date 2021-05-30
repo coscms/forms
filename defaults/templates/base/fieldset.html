@@ -1,5 +1,5 @@
 <fieldset{{if .classes }} class="{{.classes}}"{{end}}{{ if .tags}} {{.tags}}{{end}}>
-	{{- range .fields -}}
-	{{- .Render -}}
-	{{- end -}}
+	{{- range .fields }}
+	{{- .Render }}
+	{{- end }}
 </fieldset>

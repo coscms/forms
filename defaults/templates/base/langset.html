@@ -1,10 +1,10 @@
-{{- $langset := . -}}
+{{- $langset := . }}
 <div{{if $langset.params}}{{range $k,$v := $langset.params}} {{$k}}="{{$v}}"{{end}}{{end}}{{if $langset.tags}} {{$langset.tags}}{{end}}>
-	{{- range .langs -}}
+	{{- range .langs }}
     <div class="langset" id="langset-{{.ID}}">
-		{{- range $langset.fields -}}
-		{{- .Render -}}
-		{{- end -}}
+		{{- range $langset.fields }}
+		{{- .Render }}
+		{{- end }}
 	</div>
-	{{- end -}}
+	{{- end }}
 </div>
