@@ -5,6 +5,8 @@ type Element struct {
 	Type       string                 `json:"type"`
 	Name       string                 `json:"name"`
 	Label      string                 `json:"label"`
+	LabelCols  int                    `json:"labelCols"`
+	FieldCols  int                    `json:"fieldCols"`
 	Value      string                 `json:"value"`
 	HelpText   string                 `json:"helpText"`
 	Template   string                 `json:"template"`
