@@ -36,7 +36,7 @@ type FieldSetType struct {
 	Label      string                  `json:"label" xml:"label"`
 	LabelCols  int                     `json:"labelCols" xml:"labelCols"`
 	FieldCols  int                     `json:"fieldCols" xml:"fieldCols"`
-	Class      common.HTMLAttrValues   `json:"class" xml:"class"`
+	Classes    common.HTMLAttrValues   `json:"classes" xml:"classes"`
 	Tags       common.HTMLAttrValues   `json:"tags" xml:"tags"`
 	FieldList  []fields.FieldInterface `json:"fieldList" xml:"fieldList"`
 	AppendData map[string]interface{}  `json:"appendData,omitempty" xml:"appendData,omitempty"`
@@ -78,7 +78,7 @@ func (f *FieldSetType) Data() map[string]interface{} {
 		"labelCols": f.LabelCols,
 		"fieldCols": f.FieldCols,
 		"fields":    f.FieldList,
-		"classes":   f.Class,
+		"classes":   f.Classes,
 		"tags":      f.Tags,
 	}
 	for k, v := range f.AppendData {
@@ -141,7 +141,7 @@ func FieldSet(name string, label string, style string, elems ...fields.FieldInte
 		CurrName:   name,
 		OrigName:   name,
 		Label:      label,
-		Class:      common.HTMLAttrValues{},
+		Classes:    common.HTMLAttrValues{},
 		Tags:       common.HTMLAttrValues{},
 		FieldList:  elems,
 		fieldMap:   map[string]int{},
@@ -263,13 +263,13 @@ func (f *FieldSetType) Name() string {
 
 // AddClass saves the provided class for the fieldset.
 func (f *FieldSetType) AddClass(class string) *FieldSetType {
-	f.Class.Add(class)
+	f.Classes.Add(class)
 	return f
 }
 
 // RemoveClass removes the provided class from the fieldset, if it was present. Nothing is done if it was not originally present.
 func (f *FieldSetType) RemoveClass(class string) *FieldSetType {
-	f.Class.Remove(class)
+	f.Classes.Remove(class)
 	return f
 }
 

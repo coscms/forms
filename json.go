@@ -624,7 +624,7 @@ func (form *Form) ToConfig() *config.Config {
 			}
 			var temp string
 			var join string
-			for _, c := range f.Class {
+			for _, c := range f.Classes {
 				temp += join + c
 				join = ` `
 			}
