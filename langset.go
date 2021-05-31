@@ -38,7 +38,7 @@ type LangSetType struct {
 	Params     map[string]interface{} `json:"params" xml:"params"`
 	Tags       common.HTMLAttrValues  `json:"tags" xml:"tags"`
 	AppendData map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
-	SetAlone   bool                   `json:"setAlone,omitempty" xml:"setAlone,omitempty"`
+	Alone      bool                   `json:"alone,omitempty" xml:"alone,omitempty"`
 	FormStyle  string                 `json:"formStyle" xml:"formStyle"`
 
 	langMap      map[string]int                //{"zh-CN":1}
@@ -193,7 +193,7 @@ func (f *LangSetType) Elements(elems ...config.FormElement) {
 
 func (f *LangSetType) addField(field fields.FieldInterface) *LangSetType {
 	field.SetStyle(f.FormStyle)
-	if f.SetAlone {
+	if f.Alone {
 		if ind, ok := f.langMap[field.Lang()]; ok {
 			field.SetLang(f.Languages[ind].ID)
 			field.SetName(f.Languages[ind].Name(field.OriginalName()))
@@ -221,7 +221,7 @@ func (f *LangSetType) addField(field fields.FieldInterface) *LangSetType {
 }
 
 func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
-	if f.SetAlone {
+	if f.Alone {
 		if ind, ok := f.langMap[fs.Lang()]; ok {
 			for _, v := range fs.FieldList {
 				v.SetStyle(f.FormStyle)
