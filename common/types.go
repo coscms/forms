@@ -142,6 +142,21 @@ func SetCachedTemplate(cachedKey string, tmpl *template.Template) bool {
 	return true
 }
 
+func GetOrSetCachedTemplate(cachedKey string, generator func() (*template.Template, error)) (c *template.Template, err error) {
+	lock.Lock()
+	defer lock.Unlock()
+	var ok bool
+	c, ok = cachedTemplate[cachedKey]
+	if !ok {
+		c, err = generator()
+		if err != nil {
+			return
+		}
+		cachedTemplate[cachedKey] = c
+	}
+	return
+}
+
 func ClearCachedTemplate() {
 	lock.Lock()
 	cachedTemplate = make(map[string]*template.Template)
@@ -172,6 +187,21 @@ func SetCachedConfig(cachedKey string, c *config.Config) bool {
 	return true
 }
 
+func GetOrSetCachedConfig(cachedKey string, generator func() (*config.Config, error)) (c *config.Config, err error) {
+	lock.Lock()
+	defer lock.Unlock()
+	var ok bool
+	c, ok = cachedConfig[cachedKey]
+	if !ok {
+		c, err = generator()
+		if err != nil {
+			return
+		}
+		cachedConfig[cachedKey] = c
+	}
+	return
+}
+
 func ClearCachedConfig() {
 	lock.Lock()
 	cachedConfig = make(map[string]*config.Config)
@@ -194,8 +224,7 @@ func ParseTmpl(data interface{},
 	tpls ...string) string {
 	buf := bytes.NewBuffer(nil)
 	tpf := strings.Join(tpls, `|`)
-	tpl, ok := CachedTemplate(tpf)
-	if !ok {
+	tpl, err := GetOrSetCachedTemplate(tpf, func() (*template.Template, error) {
 		c := template.New(filepath.Base(tpls[0]))
 		if fn_tpl != nil {
 			c.Funcs(fn_tpl)
@@ -204,20 +233,19 @@ func ParseTmpl(data interface{},
 		if fn_fixTpl != nil {
 			tpls, err = fn_fixTpl(tpls...)
 			if err != nil {
-				return err.Error()
+				return nil, err
 			}
 		}
 		if !FileSystem.IsEmpty() {
-			tpl, err = c.ParseFS(FileSystem, tpls...)
-		} else {
-			tpl, err = c.ParseFiles(tpls...)
+			return c.ParseFS(FileSystem, tpls...)
+
 		}
-		if err != nil {
-			return err.Error()
-		}
-		SetCachedTemplate(tpf, tpl)
+		return c.ParseFiles(tpls...)
+	})
+	if err != nil {
+		return err.Error()
 	}
-	err := tpl.Execute(buf, data)
+	err = tpl.Execute(buf, data)
 	if err != nil {
 		return err.Error()
 	}
