@@ -11,7 +11,7 @@ import (
 
 func TestTextField(t *testing.T) {
 	f := FieldWithType(`title`, common.TEXT)
-	f.SetStyle(`base`)
+	f.SetTheme(`base`)
 	f.AddClass(`form-control`).AddClass(`row`)
 
 	assert.Equal(t, common.HTMLAttrValues([]string{`form-control`, `row`}), f.Classes)
@@ -31,7 +31,7 @@ func TestTextField(t *testing.T) {
 
 func TestCheckboxField(t *testing.T) {
 	f := FieldWithType(`title`, common.CHECKBOX)
-	f.SetStyle(`base`)
+	f.SetTheme(`base`)
 	f.AddChoice(`value1`, `text1`)
 	f.AddChoice(`value2`, `text2`, true)
 	f.AddChoice(`value3`, `text3`)
@@ -42,7 +42,7 @@ func TestCheckboxField(t *testing.T) {
 
 func TestSelectField(t *testing.T) {
 	f := FieldWithType(`title`, common.SELECT)
-	f.SetStyle(`base`)
+	f.SetTheme(`base`)
 	f.AddChoice(`value1`, `text1`)
 	f.AddChoice(`value2`, `text2`, true)
 	f.AddChoice(`value3`, `text3`)
