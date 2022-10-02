@@ -138,3 +138,9 @@ func (c *Config) SetDefaultValue(fieldDefaultValue func(fieldName string) string
 		setDefaultValue(c.Elements, c.Languages, fieldDefaultValue)
 	}
 }
+
+func (c *Config) SetValue(fieldValue func(fieldName string) string) {
+	if fieldValue != nil {
+		setValue(c.Elements, c.Languages, fieldValue)
+	}
+}
