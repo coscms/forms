@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/config"
 	"github.com/webx-top/com"
 )
@@ -68,4 +69,20 @@ func TestForms(t *testing.T) {
 	com.Dump(form.Data())
 	result := form.String()
 	fmt.Println(result)
+}
+
+func TestParseConfig(t *testing.T) {
+	cfg := config.Config{
+		Elements: []*config.Element{
+			{
+				ID:   ``,
+				Type: `text`,
+				Name: `test`,
+			},
+		},
+	}
+	f := NewForms(New())
+	f.Theme = common.BOOTSTRAP
+	f.Init(&cfg)
+	f.ParseFromConfig(true)
 }
