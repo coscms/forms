@@ -85,4 +85,5 @@ func TestParseConfig(t *testing.T) {
 	f.Theme = common.BOOTSTRAP
 	f.Init(&cfg)
 	f.ParseFromConfig(true)
+	com.Dump(cfg.Clone())
 }
