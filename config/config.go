@@ -144,3 +144,10 @@ func (c *Config) SetValue(fieldValue func(fieldName string) string) {
 		setValue(c.Elements, c.Languages, fieldValue)
 	}
 }
+
+func (c *Config) GetValue(fieldValue func(fieldName string, fieldValue string) error) error {
+	if fieldValue != nil {
+		return getValue(c.Elements, c.Languages, fieldValue)
+	}
+	return nil
+}

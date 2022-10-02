@@ -76,3 +76,30 @@ func setValue(elements []*Element, languages []*Language, fieldValue func(string
 		}
 	}
 }
+
+func getValue(elements []*Element, languages []*Language, fieldValue func(string, string) error) (err error) {
+	for _, elem := range elements {
+		if elem.Type == `langset` {
+			getValue(elem.Elements, elem.Languages, fieldValue)
+			continue
+		}
+		if elem.Type == `fieldset` {
+			getValue(elem.Elements, languages, fieldValue)
+			continue
+		}
+		if len(elem.Name) > 0 {
+			if len(languages) == 0 {
+				if err = fieldValue(elem.Name, elem.Value); err != nil {
+					return
+				}
+				continue
+			}
+			for _, lang := range languages {
+				if err = fieldValue(lang.Name(elem.Name), elem.Value); err != nil {
+					return
+				}
+			}
+		}
+	}
+	return
+}
