@@ -103,9 +103,9 @@ func splitFormNames(s string) []string {
 	hasLeft := false
 	hasRight := true
 	var val []rune
-	for _, r := range s {
+	for i, r := range s {
 		if r == '[' {
-			if hasRight {
+			if hasRight && i > 0 {
 				res = append(res, string(val))
 				val = []rune{}
 			}
