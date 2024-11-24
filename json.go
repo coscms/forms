@@ -123,13 +123,20 @@ func (form *Form) ValidFromJSON(b []byte, key string) error {
 	return nil
 }
 
-func (form *Form) ValidFromConfig() *Form {
+func (form *Form) ValidFromConfig(model ...interface{}) *Form {
 	form.Validate()
-	if form.Model == nil {
+	var m interface{}
+	if len(model) > 0 {
+		m = model[0]
+	}
+	if m == nil {
+		m = form.Model
+	}
+	if m == nil {
 		return form
 	}
-	t := reflect.TypeOf(form.Model)
-	v := reflect.ValueOf(form.Model)
+	t := reflect.TypeOf(m)
+	v := reflect.ValueOf(m)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
 		v = v.Elem()
@@ -219,14 +226,24 @@ func (form *Form) CloseValid(fieldName ...string) *Form {
 }
 
 func (form *Form) ParseFromConfig(insertErrors ...bool) *Form {
-	t := reflect.TypeOf(form.Model)
-	v := reflect.ValueOf(form.Model)
+	return form.ParseModelFromConfig(nil, insertErrors...)
+}
+
+func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) *Form {
+	if model == nil {
+		model = form.Model
+	}
+	if model == nil {
+		return form
+	}
+	t := reflect.TypeOf(model)
+	v := reflect.ValueOf(model)
 	if t != nil && t.Kind() == reflect.Ptr {
 		t = t.Elem()
 		v = v.Elem()
 	}
 	r := form.config
-	form.ParseElements(form, r.Elements, r.Languages, t, v, ``)
+	form.ParseModelElements(model, form, r.Elements, r.Languages, t, v, ``)
 	if len(insertErrors) < 1 || insertErrors[0] {
 		form.InsertErrors()
 	}
@@ -257,6 +274,10 @@ func (form *Form) ParseFromConfig(insertErrors ...bool) *Form {
 }
 
 func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, langs []*config.Language, t reflect.Type, v reflect.Value, lang string) {
+	form.ParseModelElements(form.Model, es, elements, langs, t, v, lang)
+}
+
+func (form *Form) ParseModelElements(model interface{}, es ElementSetter, elements []*config.Element, langs []*config.Language, t reflect.Type, v reflect.Value, lang string) {
 	for _, ele := range elements {
 		switch ele.Type {
 		case `langset`:
@@ -271,7 +292,7 @@ func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, la
 			for key, val := range ele.Data {
 				f.SetData(key, val)
 			}
-			form.ParseElements(f, ele.Elements, ele.Languages, t, v, ``)
+			form.ParseModelElements(model, f, ele.Elements, ele.Languages, t, v, ``)
 			for _, v := range ele.Attributes {
 				switch len(v) {
 				case 2:
@@ -284,7 +305,7 @@ func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, la
 		case `fieldset`:
 			elems := []fields.FieldInterface{}
 			for _, e := range ele.Elements {
-				elem := form.parseElement(e, t, v)
+				elem := form.parseElement(model, e, t, v)
 				if elem != nil {
 					elems = append(elems, elem)
 				}
@@ -302,7 +323,7 @@ func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, la
 			f.SetLang(lang)
 			es.Elements(f)
 		default:
-			f := form.parseElement(ele, t, v)
+			f := form.parseElement(model, ele, t, v)
 			if f != nil {
 				f.SetLang(lang)
 				es.Elements(f)
@@ -329,10 +350,10 @@ func (form *Form) cleanName(name string) string {
 	return name
 }
 
-func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflect.Value) (f *fields.Field) {
+func (form *Form) parseElement(model interface{}, ele *config.Element, typ reflect.Type, val reflect.Value) (f *fields.Field) {
 	var sv string
 	value := val
-	if form.Model != nil && !form.IsOmit(ele.Name) {
+	if model != nil && !form.IsOmit(ele.Name) {
 		parts := form.parseNameToStructFieldName(ele.Name)
 		isValid := true
 		for _, field := range parts {

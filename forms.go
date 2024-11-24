@@ -111,6 +111,33 @@ type Form struct {
 	structFieldConverter  func(string) string
 }
 
+func (f *Form) Reset() *Form {
+	f.AppendData = map[string]interface{}{}
+	f.Model = nil
+	f.FieldList = []config.FormElement{}
+	f.Theme = ``
+	f.Class = common.HTMLAttrValues{}
+	f.ID = ``
+	f.Params = map[string]string{}
+	f.CSS = map[string]string{}
+	f.Method = ``
+	f.Action = template.HTML(``)
+	f.omitOrMustFieldsValue = map[string]bool{}
+	f.omitAllFieldsValue = false
+	f.fieldMap = map[string]int{}
+	f.containerMap = map[string]string{}
+	f.ignoreValid = []string{}
+	f.valid = nil
+	f.labelFn = nil
+	f.validTagFn = nil
+	f.config = nil
+	f.beforeRender = []func(){}
+	f.debug = false
+	f.data = map[string]interface{}{}
+	f.structFieldConverter = nil
+	return f
+}
+
 func (f *Form) Debug(args ...bool) *Form {
 	if len(args) > 0 {
 		f.debug = args[0]
@@ -232,10 +259,14 @@ func (f *Form) HTMLTemplate() (*template.Template, error) {
 }
 
 func (f *Form) Valid(onlyCheckFields ...string) error {
-	if f.Model == nil {
+	return f.ValidModel(f.Model, onlyCheckFields...)
+}
+
+func (f *Form) ValidModel(model interface{}, onlyCheckFields ...string) error {
+	if model == nil {
 		return nil
 	}
-	passed, err := f.Validate().Valid(f.Model, onlyCheckFields...)
+	passed, err := f.Validate().Valid(model, onlyCheckFields...)
 	if err != nil {
 		return err
 	}
