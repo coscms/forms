@@ -303,14 +303,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
 			}
 			es.Elements(f)
 		case `fieldset`:
-			elems := []config.FormElement{}
-			for _, e := range ele.Elements {
-				elem := form.parseElement(model, e, t, v)
-				if elem != nil {
-					elems = append(elems, elem)
-				}
-			}
-			f := form.NewFieldSet(ele.Name, form.labelFn(ele.Label), elems...)
+			f := form.NewFieldSet(ele.Name, form.labelFn(ele.Label))
 			if len(ele.Template) > 0 {
 				f.SetTemplate(ele.Template)
 			}
