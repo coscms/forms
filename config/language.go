@@ -69,6 +69,10 @@ func (l *Language) Fields() []FormElement {
 	return l.fields
 }
 
+func (l *Language) Groups() Groups {
+	return SplitGroup(l.fields)
+}
+
 func (l *Language) Clone() *Language {
 	lg := NewLanguage(l.ID, l.Label, l.NameFormat)
 	copy(lg.fields, l.fields)
