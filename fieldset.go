@@ -135,16 +135,17 @@ func (f *FieldSetType) SetTemplate(tmpl string) *FieldSetType {
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func FieldSet(name string, label string, theme string, elems ...config.FormElement) *FieldSetType {
 	ret := &FieldSetType{
-		Template:   "fieldset",
-		CurrName:   name,
-		OrigName:   name,
-		Label:      label,
-		Classes:    common.HTMLAttrValues{},
-		Tags:       common.HTMLAttrValues{},
-		FieldList:  elems,
-		fieldMap:   map[string]int{},
-		AppendData: map[string]interface{}{},
-		FormTheme:  theme,
+		Template:     "fieldset",
+		CurrName:     name,
+		OrigName:     name,
+		Label:        label,
+		Classes:      common.HTMLAttrValues{},
+		Tags:         common.HTMLAttrValues{},
+		FieldList:    elems,
+		containerMap: make(map[string]string),
+		fieldMap:     map[string]int{},
+		AppendData:   map[string]interface{}{},
+		FormTheme:    theme,
 	}
 	for i, elem := range elems {
 		ret.fieldMap[elem.OriginalName()] = i
