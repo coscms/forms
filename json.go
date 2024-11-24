@@ -273,11 +273,15 @@ func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) 
 	return form
 }
 
-func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, langs []*config.Language, t reflect.Type, v reflect.Value, lang string) {
+func (form *Form) ParseElements(es ElementSetter,
+	elements []*config.Element, langs []*config.Language,
+	t reflect.Type, v reflect.Value, lang string) {
 	form.ParseModelElements(form.Model, es, elements, langs, t, v, lang)
 }
 
-func (form *Form) ParseModelElements(model interface{}, es ElementSetter, elements []*config.Element, langs []*config.Language, t reflect.Type, v reflect.Value, lang string) {
+func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
+	elements []*config.Element, langs []*config.Language,
+	t reflect.Type, v reflect.Value, lang string) {
 	for _, ele := range elements {
 		switch ele.Type {
 		case `langset`:
@@ -303,7 +307,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter, elemen
 			}
 			es.Elements(f)
 		case `fieldset`:
-			elems := []fields.FieldInterface{}
+			elems := []config.FormElement{}
 			for _, e := range ele.Elements {
 				elem := form.parseElement(model, e, t, v)
 				if elem != nil {
@@ -318,6 +322,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter, elemen
 			for key, val := range ele.Data {
 				f.SetData(key, val)
 			}
+			form.ParseModelElements(model, f, ele.Elements, ele.Languages, t, v, ``)
 			f.SetLabelCols(ele.LabelCols)
 			f.SetFieldCols(ele.FieldCols)
 			f.SetLang(lang)
@@ -697,7 +702,9 @@ func (form *Form) ToConfig() *config.Config {
 				element.Attributes = append(element.Attributes, []string{c})
 			}
 			for _, ff := range f.FieldList {
-				element.Elements = append(element.Elements, ff.Element())
+				if fi, ok := ff.(fields.FieldInterface); ok {
+					element.Elements = append(element.Elements, fi.Element())
+				}
 			}
 		case fields.FieldInterface:
 			element = f.Element()

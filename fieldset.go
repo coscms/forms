@@ -31,20 +31,21 @@ import (
 
 // FieldSetType is a collection of fields grouped within a form.
 type FieldSetType struct {
-	OrigName   string                  `json:"origName" xml:"origName"`
-	CurrName   string                  `json:"currName" xml:"currName"`
-	Label      string                  `json:"label" xml:"label"`
-	LabelCols  int                     `json:"labelCols" xml:"labelCols"`
-	FieldCols  int                     `json:"fieldCols" xml:"fieldCols"`
-	Classes    common.HTMLAttrValues   `json:"classes" xml:"classes"`
-	Tags       common.HTMLAttrValues   `json:"tags" xml:"tags"`
-	FieldList  []fields.FieldInterface `json:"fieldList" xml:"fieldList"`
-	AppendData map[string]interface{}  `json:"appendData,omitempty" xml:"appendData,omitempty"`
-	FormTheme  string                  `json:"formTheme" xml:"formTheme"`
-	Language   string                  `json:"language,omitempty" xml:"language,omitempty"`
-	Template   string                  `json:"template" xml:"template"`
-	fieldMap   map[string]int
-	data       map[string]interface{}
+	OrigName     string                 `json:"origName" xml:"origName"`
+	CurrName     string                 `json:"currName" xml:"currName"`
+	Label        string                 `json:"label" xml:"label"`
+	LabelCols    int                    `json:"labelCols" xml:"labelCols"`
+	FieldCols    int                    `json:"fieldCols" xml:"fieldCols"`
+	Classes      common.HTMLAttrValues  `json:"classes" xml:"classes"`
+	Tags         common.HTMLAttrValues  `json:"tags" xml:"tags"`
+	FieldList    []config.FormElement   `json:"fieldList" xml:"fieldList"`
+	AppendData   map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
+	FormTheme    string                 `json:"formTheme" xml:"formTheme"`
+	Language     string                 `json:"language,omitempty" xml:"language,omitempty"`
+	Template     string                 `json:"template" xml:"template"`
+	fieldMap     map[string]int
+	containerMap map[string]string
+	data         map[string]interface{}
 }
 
 func (f *FieldSetType) SetData(key string, value interface{}) {
@@ -132,7 +133,7 @@ func (f *FieldSetType) SetTemplate(tmpl string) *FieldSetType {
 
 // FieldSet creates and returns a new FieldSetType with the given name and list of fields.
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
-func FieldSet(name string, label string, theme string, elems ...fields.FieldInterface) *FieldSetType {
+func FieldSet(name string, label string, theme string, elems ...config.FormElement) *FieldSetType {
 	ret := &FieldSetType{
 		Template:   "fieldset",
 		CurrName:   name,
@@ -151,11 +152,11 @@ func FieldSet(name string, label string, theme string, elems ...fields.FieldInte
 	return ret
 }
 
-//SortAll("field1,field2") or SortAll("field1","field2")
+// SortAll("field1,field2") or SortAll("field1","field2")
 func (f *FieldSetType) SortAll(sortList ...string) *FieldSetType {
 	elem := f.FieldList
 	size := len(elem)
-	f.FieldList = make([]fields.FieldInterface, size)
+	f.FieldList = make([]config.FormElement, size)
 	var sortSlice []string
 	if len(sortList) == 1 {
 		sortSlice = strings.Split(sortList[0], ",")
@@ -172,13 +173,36 @@ func (f *FieldSetType) SortAll(sortList ...string) *FieldSetType {
 }
 
 // Elements adds the provided elements to the fieldset.
-func (f *FieldSetType) Elements(elems ...config.FormElement) *FieldSetType {
+func (f *FieldSetType) Elements(elems ...config.FormElement) {
 	for _, e := range elems {
 		switch v := e.(type) {
 		case fields.FieldInterface:
 			f.addField(v)
+		case *FieldSetType:
+			f.addFieldSet(v)
+		case *LangSetType:
+			f.addLangSet(v)
 		}
 	}
+}
+
+func (f *FieldSetType) addFieldSet(fs *FieldSetType) *FieldSetType {
+	for _, v := range fs.FieldList {
+		v.SetData("container", "fieldset")
+		f.containerMap[v.OriginalName()] = fs.OriginalName()
+	}
+	f.FieldList = append(f.FieldList, fs)
+	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1
+	return f
+}
+
+func (f *FieldSetType) addLangSet(fs *LangSetType) *FieldSetType {
+	for _, v := range fs.fieldMap {
+		v.SetData("container", "langset")
+		f.containerMap[v.OriginalName()] = fs.OriginalName()
+	}
+	f.FieldList = append(f.FieldList, fs)
+	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1
 	return f
 }
 
@@ -190,7 +214,7 @@ func (f *FieldSetType) addField(field fields.FieldInterface) *FieldSetType {
 	return f
 }
 
-//Sort("field1:1,field2:2") or Sort("field1:1","field2:2")
+// Sort("field1:1,field2:2") or Sort("field1:1","field2:2")
 func (f *FieldSetType) Sort(sortList ...string) *FieldSetType {
 	size := len(f.FieldList)
 	endIdx := size - 1
@@ -250,7 +274,47 @@ func (f *FieldSetType) Field(name string) fields.FieldInterface {
 	if !ok {
 		return &fields.Field{}
 	}
-	return f.FieldList[ind].(fields.FieldInterface)
+	switch v := f.FieldList[ind].(type) {
+	case fields.FieldInterface:
+		return v
+	case *FieldSetType:
+		if v, ok := f.containerMap[name]; ok {
+			return f.FieldSet(v).Field(name)
+		}
+	case *LangSetType:
+		if v, ok := f.containerMap[name]; ok {
+			return f.LangSet(v).Field(name)
+		}
+	}
+	return &fields.Field{}
+}
+
+// FieldSet returns the fieldset identified by name. It returns an empty field if it is missing.
+func (f *FieldSetType) FieldSet(name string) *FieldSetType {
+	ind, ok := f.fieldMap[name]
+	if !ok {
+		return &FieldSetType{}
+	}
+	switch v := f.FieldList[ind].(type) {
+	case *FieldSetType:
+		return v
+	default:
+		return &FieldSetType{}
+	}
+}
+
+// LangSet returns the fieldset identified by name. It returns an empty field if it is missing.
+func (f *FieldSetType) LangSet(name string) *LangSetType {
+	ind, ok := f.fieldMap[name]
+	if !ok {
+		return &LangSetType{}
+	}
+	switch v := f.FieldList[ind].(type) {
+	case *LangSetType:
+		return v
+	default:
+		return &LangSetType{}
+	}
 }
 
 // Name returns the name of the fieldset.
@@ -296,8 +360,8 @@ func (f *FieldSetType) Enable() *FieldSetType {
 
 func (f *FieldSetType) sortFields(index, oldIndex, endIdx, size int) {
 
-	var newFields []fields.FieldInterface
-	oldFields := make([]fields.FieldInterface, size)
+	var newFields []config.FormElement
+	oldFields := make([]config.FormElement, size)
 	copy(oldFields, f.FieldList)
 	var min, max int
 	if index > oldIndex {

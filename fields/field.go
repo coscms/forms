@@ -16,7 +16,7 @@
 
 */
 
-//Package fields This package provides all the input fields logic and customization methods.
+// Package fields This package provides all the input fields logic and customization methods.
 package fields
 
 import (
@@ -30,7 +30,8 @@ import (
 	"github.com/coscms/forms/widgets"
 )
 
-var _ FieldInterface = &Field{}
+var _ FieldInterface = (*Field)(nil)
+var _ config.FormElement = (*Field)(nil)
 
 // Field is a generic type containing all data associated to an input field.
 type Field struct {
@@ -401,7 +402,7 @@ func (f *Field) SetSelected(opt ...string) FieldInterface {
 	return f
 }
 
-//RemoveSelected If the field is configured as "multiple", AddSelected removes the selected value from the field (valid for SelectFields only).
+// RemoveSelected If the field is configured as "multiple", AddSelected removes the selected value from the field (valid for SelectFields only).
 // It has no effect if type is not SELECT.
 func (f *Field) RemoveSelected(opt string) FieldInterface {
 	switch f.Type {

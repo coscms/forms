@@ -351,7 +351,7 @@ func (f *Form) ParseModel(model ...interface{}) *Form {
 }
 
 func (f *Form) AddButton(tmpl string, args ...string) *Form {
-	btnFields := make([]fields.FieldInterface, 0)
+	btnFields := make([]config.FormElement, 0, 3)
 	if len(args) < 1 {
 		btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")))
 		btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")))
@@ -680,7 +680,6 @@ func (f *Form) addField(field fields.FieldInterface) *Form {
 
 func (f *Form) addFieldSet(fs *FieldSetType) *Form {
 	for _, v := range fs.FieldList {
-		v.SetTheme(f.Theme)
 		v.SetData("container", "fieldset")
 		f.containerMap[v.OriginalName()] = fs.OriginalName()
 	}
@@ -822,7 +821,7 @@ func (f *Form) FieldSet(name string) *FieldSetType {
 
 // NewFieldSet creates and returns a new FieldSetType with the given name and list of fields.
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
-func (f *Form) NewFieldSet(name string, label string, elems ...fields.FieldInterface) *FieldSetType {
+func (f *Form) NewFieldSet(name string, label string, elems ...config.FormElement) *FieldSetType {
 	return FieldSet(name, label, f.Theme, elems...)
 }
 

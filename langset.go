@@ -1,19 +1,17 @@
 /*
+Copyright 2016-present Wenhui Shen <www.webx.top>
 
-   Copyright 2016-present Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package forms
 
@@ -154,7 +152,7 @@ func LangSet(name string, theme string, languages ...*config.Language) *LangSetT
 	return ret
 }
 
-//SortAll("field1,field2") or SortAll("field1","field2")
+// SortAll("field1,field2") or SortAll("field1","field2")
 func (f *LangSetType) SortAll(sortList ...string) *LangSetType {
 	elem := f.Languages
 	size := len(elem)
@@ -219,7 +217,6 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 	if f.Alone {
 		if ind, ok := f.langMap[fs.Lang()]; ok {
 			for _, v := range fs.FieldList {
-				v.SetTheme(f.FormTheme)
 				v.SetData("container", "langset")
 				v.SetLang(f.Languages[ind].ID)
 				v.SetName(f.Languages[ind].Name(v.OriginalName()))
@@ -239,7 +236,6 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 		if k == 0 {
 			for _, v := range fs.FieldList {
 				v.SetLang(language.ID)
-				v.SetTheme(f.FormTheme)
 				v.SetData("container", "langset")
 				key := v.Lang() + `:` + v.OriginalName()
 				f.fieldMap[key] = v
@@ -253,9 +249,9 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 			continue
 		}
 		fsCopy := fs.Clone().(*FieldSetType)
-		fsCopy.FieldList = make([]fields.FieldInterface, len(fs.FieldList))
+		fsCopy.FieldList = make([]config.FormElement, len(fs.FieldList))
 		for kk, v := range fs.FieldList {
-			fieldCopy := v.Clone().(fields.FieldInterface)
+			fieldCopy := v.Clone()
 			fieldCopy.SetLang(language.ID)
 			fieldCopy.SetName(language.Name(fieldCopy.OriginalName()))
 			key := fieldCopy.Lang() + `:` + fieldCopy.OriginalName()
@@ -312,11 +308,11 @@ func (f *LangSetType) FieldSet(name string) *FieldSetType {
 
 // NewFieldSet creates and returns a new FieldSetType with the given name and list of fields.
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
-func (f *LangSetType) NewFieldSet(name string, label string, elems ...fields.FieldInterface) *FieldSetType {
+func (f *LangSetType) NewFieldSet(name string, label string, elems ...config.FormElement) *FieldSetType {
 	return FieldSet(name, label, f.FormTheme, elems...)
 }
 
-//Sort Sort("field1:1,field2:2") or Sort("field1:1","field2:2")
+// Sort Sort("field1:1,field2:2") or Sort("field1:1","field2:2")
 func (f *LangSetType) Sort(sortList ...string) *LangSetType {
 	size := len(f.Languages)
 	endIdx := size - 1
