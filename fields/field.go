@@ -631,3 +631,7 @@ func (f *Field) Element() *config.Element {
 	}
 	return elem
 }
+
+func (f *Field) HasError() bool {
+	return len(f.Errors) > 0
+}

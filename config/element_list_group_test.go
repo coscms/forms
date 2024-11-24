@@ -35,6 +35,7 @@ func TestSplitGroup(t *testing.T) {
 			OrigName:  `5`,
 			LabelCols: 0,
 			FieldCols: 4,
+			Errors:    []string{`Test`},
 		},
 	})
 	assert.Equal(t, 3, len(r))

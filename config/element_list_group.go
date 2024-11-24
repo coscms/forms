@@ -1,6 +1,7 @@
 package config
 
 type Grouped struct {
+	HasError bool
 	Elements []FormElement
 }
 
@@ -12,6 +13,11 @@ func SplitGroup(elements []FormElement) Groups {
 	g := Grouped{}
 	for idx, ele := range elements {
 		if idx == 0 {
+			if !g.HasError {
+				if he, ok := ele.(HasError); ok {
+					g.HasError = he.HasError()
+				}
+			}
 			g.Elements = append(g.Elements, ele)
 			t += ele.Cols()
 		} else {
@@ -20,6 +26,11 @@ func SplitGroup(elements []FormElement) Groups {
 				result = append(result, g)
 				g = Grouped{}
 				t = 0
+			}
+			if !g.HasError {
+				if he, ok := ele.(HasError); ok {
+					g.HasError = he.HasError()
+				}
 			}
 			g.Elements = append(g.Elements, ele)
 			t += ele.Cols()

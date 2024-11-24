@@ -16,3 +16,7 @@ type FormElement interface {
 	Lang() string
 	Clone() FormElement
 }
+
+type HasError interface {
+	HasError() bool
+}
