@@ -103,3 +103,21 @@ func getValue(elements []*Element, languages []*Language, fieldValue func(string
 	}
 	return
 }
+
+func GetCols(labelCols int, fieldCols int) int {
+	return GetLabelCols(labelCols) + GetFieldCols(fieldCols)
+}
+
+func GetLabelCols(labelCols int) int {
+	if labelCols == 0 {
+		labelCols = 2
+	}
+	return labelCols
+}
+
+func GetFieldCols(fieldCols int) int {
+	if fieldCols == 0 {
+		fieldCols = 8
+	}
+	return fieldCols
+}

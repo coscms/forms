@@ -6,6 +6,7 @@ import "html/template"
 type FormElement interface {
 	Render() template.HTML
 	Name() string
+	Cols() int
 	OriginalName() string
 	SetName(string)
 	String() string

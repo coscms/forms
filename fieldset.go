@@ -48,6 +48,10 @@ type FieldSetType struct {
 	data         map[string]interface{}
 }
 
+func (f *FieldSetType) Cols() int {
+	return config.GetCols(f.LabelCols, f.FieldCols)
+}
+
 func (f *FieldSetType) SetData(key string, value interface{}) {
 	f.AppendData[key] = value
 }
@@ -79,6 +83,7 @@ func (f *FieldSetType) Data() map[string]interface{} {
 		"labelCols": f.LabelCols,
 		"fieldCols": f.FieldCols,
 		"fields":    f.FieldList,
+		"groups":    config.SplitGroup(f.FieldList),
 		"classes":   f.Classes,
 		"tags":      f.Tags,
 	}

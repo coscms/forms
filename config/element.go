@@ -21,6 +21,10 @@ type Element struct {
 	Data       map[string]interface{} `json:"data,omitempty"`
 }
 
+func (e *Element) Cols() int {
+	return GetCols(e.LabelCols, e.FieldCols)
+}
+
 func (e *Element) Clone() *Element {
 	elements := make([]*Element, len(e.Elements))
 	languages := make([]*Language, len(e.Languages))

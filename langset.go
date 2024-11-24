@@ -45,6 +45,10 @@ type LangSetType struct {
 	data         map[string]interface{}
 }
 
+func (f *LangSetType) Cols() int {
+	return 0
+}
+
 func (f *LangSetType) SetName(name string) {
 	f.CurrName = name
 }

@@ -11,6 +11,7 @@ import (
 type FieldInterface interface {
 	Name() string
 	OriginalName() string
+	Cols() int
 	SetName(string)
 	SetLabelCols(cols int)
 	SetFieldCols(cols int)

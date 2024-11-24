@@ -85,6 +85,10 @@ func FieldWithType(name, t string) *Field {
 	}
 }
 
+func (f *Field) Cols() int {
+	return config.GetCols(f.LabelCols, f.FieldCols)
+}
+
 func (f *Field) SetTemplate(tmpl string, theme ...string) FieldInterface {
 	f.Template = tmpl
 	if len(f.Template) > 0 && f.widget != nil && f.Template != tmpl {

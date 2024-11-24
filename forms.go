@@ -610,6 +610,7 @@ func (f *Form) Data() map[string]interface{} {
 	f.data = map[string]interface{}{
 		"container": "",
 		"fields":    f.FieldList,
+		"groups":    config.SplitGroup(f.FieldList),
 		"classes":   f.Class,
 		"id":        f.ID,
 		"params":    safeParams,
