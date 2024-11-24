@@ -2,8 +2,6 @@ module github.com/coscms/forms
 
 go 1.21
 
-toolchain go1.23.1
-
 require (
 	github.com/admpub/json5 v0.0.1
 	github.com/stretchr/testify v1.9.0
