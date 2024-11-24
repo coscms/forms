@@ -323,6 +323,9 @@ func (form *Form) cleanName(name string) string {
 	if len(form.config.TrimNamePrefix) > 0 {
 		name = strings.TrimPrefix(name, form.config.TrimNamePrefix)
 	}
+	if form.structFieldConverter != nil {
+		name = form.structFieldConverter(name)
+	}
 	return name
 }
 

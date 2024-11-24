@@ -108,6 +108,7 @@ type Form struct {
 	beforeRender          []func()
 	debug                 bool
 	data                  map[string]interface{}
+	structFieldConverter  func(string) string
 }
 
 func (f *Form) Debug(args ...bool) *Form {
@@ -116,6 +117,11 @@ func (f *Form) Debug(args ...bool) *Form {
 	} else {
 		f.debug = true
 	}
+	return f
+}
+
+func (f *Form) SetStructFieldConverter(convert func(string) string) *Form {
+	f.structFieldConverter = convert
 	return f
 }
 
