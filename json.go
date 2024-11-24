@@ -193,13 +193,9 @@ func (form *Form) ValidElements(elements []*config.Element, t reflect.Type, v re
 	for _, ele := range elements {
 		switch ele.Type {
 		case `langset`:
-			//form.ValidElements(ele.Elements, t, v)
+			form.ValidElements(ele.Elements, t, v)
 		case `fieldset`:
-			for _, e := range ele.Elements {
-				if !form.IsIgnored(e.Name) {
-					form.validElement(e, t, v)
-				}
-			}
+			form.ValidElements(ele.Elements, t, v)
 		default:
 			if !form.IsIgnored(ele.Name) {
 				form.validElement(ele, t, v)
