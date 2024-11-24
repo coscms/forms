@@ -19,18 +19,19 @@
 package config
 
 type Config struct {
-	ID           string                 `json:"id"`
-	Theme        string                 `json:"theme"`
-	Template     string                 `json:"template"`
-	Method       string                 `json:"method"`
-	Action       string                 `json:"action"`
-	Attributes   [][]string             `json:"attributes"`
-	WithButtons  bool                   `json:"withButtons"`
-	Buttons      []string               `json:"buttons"`
-	BtnsTemplate string                 `json:"btnsTemplate"`
-	Elements     []*Element             `json:"elements"`
-	Languages    []*Language            `json:"languages"`
-	Data         map[string]interface{} `json:"data,omitempty"`
+	ID             string                 `json:"id"`
+	Theme          string                 `json:"theme"`
+	Template       string                 `json:"template"`
+	Method         string                 `json:"method"`
+	Action         string                 `json:"action"`
+	Attributes     [][]string             `json:"attributes"`
+	WithButtons    bool                   `json:"withButtons"`
+	Buttons        []string               `json:"buttons"`
+	BtnsTemplate   string                 `json:"btnsTemplate"`
+	Elements       []*Element             `json:"elements"`
+	Languages      []*Language            `json:"languages"`
+	Data           map[string]interface{} `json:"data,omitempty"`
+	TrimNamePrefix string                 `json:"trimNamePrefix,omitempty"`
 }
 
 func (c *Config) AddElement(elements ...*Element) *Config {

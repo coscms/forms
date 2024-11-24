@@ -311,11 +311,26 @@ func (form *Form) ParseElements(es ElementSetter, elements []*config.Element, la
 	}
 }
 
+func (form *Form) parseNameToStructFieldName(name string) []string {
+	name = form.cleanName(name)
+	if strings.HasSuffix(name, `]`) {
+		return splitFormNames(name)
+	}
+	return strings.Split(name, `.`)
+}
+
+func (form *Form) cleanName(name string) string {
+	if len(form.config.TrimNamePrefix) > 0 {
+		name = strings.TrimPrefix(name, form.config.TrimNamePrefix)
+	}
+	return name
+}
+
 func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflect.Value) (f *fields.Field) {
 	var sv string
 	value := val
 	if form.Model != nil && !form.IsOmit(ele.Name) {
-		parts := strings.Split(ele.Name, `.`)
+		parts := form.parseNameToStructFieldName(ele.Name)
 		isValid := true
 		for _, field := range parts {
 			if value.Kind() == reflect.Ptr {
@@ -364,13 +379,14 @@ func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflec
 		}
 	}
 	isStruct := typ != nil && typ.Kind() == reflect.Struct
+	structFieldName := strings.Title(form.cleanName(ele.Name))
 	switch ele.Type {
 	case common.DATE:
 		dateFormat := fields.DATE_FORMAT
 		if len(ele.Format) > 0 {
 			dateFormat = ele.Format
 		} else if isStruct {
-			if structField, ok := typ.FieldByName(strings.Title(ele.Name)); ok {
+			if structField, ok := typ.FieldByName(structFieldName); ok {
 				if format := tagfast.Value(typ, structField, `form_format`); len(format) > 0 {
 					dateFormat = format
 				}
@@ -390,7 +406,7 @@ func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflec
 		if len(ele.Format) > 0 {
 			dateFormat = ele.Format
 		} else if isStruct {
-			if structField, ok := typ.FieldByName(strings.Title(ele.Name)); ok {
+			if structField, ok := typ.FieldByName(structFieldName); ok {
 				if format := tagfast.Value(typ, structField, `form_format`); len(format) > 0 {
 					dateFormat = format
 				}
@@ -410,7 +426,7 @@ func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflec
 		if len(ele.Format) > 0 {
 			dateFormat = ele.Format
 		} else if isStruct {
-			if structField, ok := typ.FieldByName(strings.Title(ele.Name)); ok {
+			if structField, ok := typ.FieldByName(structFieldName); ok {
 				if format := tagfast.Value(typ, structField, `form_format`); len(format) > 0 {
 					dateFormat = format
 				}
@@ -430,7 +446,7 @@ func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflec
 		if len(ele.Format) > 0 {
 			dateFormat = ele.Format
 		} else if isStruct {
-			if structField, ok := typ.FieldByName(strings.Title(ele.Name)); ok {
+			if structField, ok := typ.FieldByName(structFieldName); ok {
 				if format := tagfast.Value(typ, structField, `form_format`); len(format) > 0 {
 					dateFormat = format
 				}
@@ -449,7 +465,7 @@ func (form *Form) parseElement(ele *config.Element, typ reflect.Type, val reflec
 		f = fields.TextField(ele.Name, ele.Type)
 		format := ele.Format
 		if len(format) == 0 && isStruct {
-			if structField, ok := typ.FieldByName(strings.Title(ele.Name)); ok {
+			if structField, ok := typ.FieldByName(structFieldName); ok {
 				format = tagfast.Value(typ, structField, `form_format`)
 			}
 		}
@@ -582,7 +598,7 @@ func (form *Form) validElement(ele *config.Element, typ reflect.Type, val reflec
 	if len(ele.Valid) == 0 {
 		return true
 	}
-	parts := strings.Split(ele.Name, `.`)
+	parts := form.parseNameToStructFieldName(ele.Name)
 	value := val
 	isValid := true
 	for _, field := range parts {

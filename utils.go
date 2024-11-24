@@ -1,19 +1,17 @@
 /*
+Copyright 2016-present Wenhui Shen <www.webx.top>
 
-   Copyright 2016-present Wenhui Shen <www.webx.top>
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+	http://www.apache.org/licenses/LICENSE-2.0
 
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 */
 package forms
 
@@ -43,23 +41,29 @@ func NewConfig() *config.Config {
 }
 
 // GenChoices generate choices
-// type Data struct{
-// 	ID string
-// 	Name string
-// }
-// data:=[]*Data{
-// 	&Data{ID:"a",Name:"One"},
-// 	&Data{ID:"b",Name:"Two"},
-// }
-// GenChoices(len(data), func(index int) (string, string, bool){
-// 	return data[index].ID,data[index].Name,false
-// })
+//
+//	type Data struct{
+//		ID string
+//		Name string
+//	}
+//
+//	data:=[]*Data{
+//		&Data{ID:"a",Name:"One"},
+//		&Data{ID:"b",Name:"Two"},
+//	}
+//
+//	GenChoices(len(data), func(index int) (string, string, bool){
+//		return data[index].ID,data[index].Name,false
+//	})
+//
 // or
-// GenChoices(map[string]int{
-// 	"":len(data),
-// }, func(group string,index int) (string, string, bool){
-// 	return data[index].ID,data[index].Name,false
-// })
+//
+//	GenChoices(map[string]int{
+//		"":len(data),
+//	}, func(group string,index int) (string, string, bool){
+//
+//		return data[index].ID,data[index].Name,false
+//	})
 func GenChoices(lenType interface{}, fnType interface{}) interface{} {
 	switch fn := fnType.(type) {
 	case func(int) (string, string, bool):
@@ -91,4 +95,36 @@ func GenChoices(lenType interface{}, fnType interface{}) interface{} {
 		return result
 	}
 	return nil
+}
+
+// splitFormNames user[name][test]
+func splitFormNames(s string) []string {
+	var res []string
+	hasLeft := false
+	hasRight := true
+	var val []rune
+	for _, r := range s {
+		if r == '[' {
+			if hasRight {
+				res = append(res, string(val))
+				val = []rune{}
+			}
+			hasLeft = true
+			hasRight = false
+			continue
+		}
+		if r == ']' {
+			if hasLeft {
+				res = append(res, string(val))
+				val = []rune{}
+				hasLeft = false
+			}
+			continue
+		}
+		val = append(val, r)
+	}
+	if len(val) > 0 {
+		res = append(res, string(val))
+	}
+	return res
 }

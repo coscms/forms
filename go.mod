@@ -1,17 +1,30 @@
 module github.com/coscms/forms
 
-go 1.16
+go 1.21
+
+toolchain go1.23.1
 
 require (
-	github.com/admpub/fsnotify v1.5.0 // indirect
 	github.com/admpub/json5 v0.0.1
-	github.com/francoispqt/gojay v1.2.13 // indirect
-	github.com/goccy/go-json v0.9.11 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/stretchr/testify v1.7.0
-	github.com/webx-top/com v0.7.0
-	github.com/webx-top/tagfast v0.0.0-20161020041435-9a2065ce3dd2
+	github.com/stretchr/testify v1.9.0
+	github.com/webx-top/com v1.3.19
+	github.com/webx-top/tagfast v0.0.1
 	github.com/webx-top/validation v0.0.3
-	golang.org/x/sync v0.0.0-20220929204114-8fcdb60fdcc0
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/sync v0.9.0
+)
+
+require (
+	github.com/admpub/fsnotify v1.7.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/francoispqt/gojay v1.2.13 // indirect
+	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/hashicorp/go-version v1.7.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

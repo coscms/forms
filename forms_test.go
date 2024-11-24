@@ -42,7 +42,7 @@ func TestForms(t *testing.T) {
 	}, &config.Element{
 		ID:    `input-items-k1`,
 		Type:  `text`,
-		Name:  `items.itemK1`,
+		Name:  `items[itemK1]`,
 		Label: `Item K1`,
 	}, &config.Element{
 		ID:    `input-data-test`,
