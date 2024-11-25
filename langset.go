@@ -35,6 +35,7 @@ type LangSetType struct {
 	Template   string                 `json:"template" xml:"template"`
 	Params     map[string]interface{} `json:"params" xml:"params"`
 	Tags       common.HTMLAttrValues  `json:"tags" xml:"tags"`
+	Helptext   string                 `json:"helpText" xml:"helpText"`
 	AppendData map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
 	Alone      bool                   `json:"alone,omitempty" xml:"alone,omitempty"`
 	FormTheme  string                 `json:"formTheme" xml:"formTheme"`
@@ -81,6 +82,12 @@ func (f *LangSetType) Language(lang string) *config.Language {
 	return nil
 }
 
+// SetHelptext saves the field helptext.
+func (f *LangSetType) SetHelptext(text string) *LangSetType {
+	f.Helptext = text
+	return f
+}
+
 func (f *LangSetType) SetData(key string, value interface{}) {
 	f.AppendData[key] = value
 }
@@ -97,6 +104,7 @@ func (f *LangSetType) Data() map[string]interface{} {
 		"tags":      f.Tags,
 		"langs":     f.Languages,
 		"name":      f.CurrName,
+		"helptext":  f.Helptext,
 	}
 	for k, v := range f.AppendData {
 		f.data[k] = v

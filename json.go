@@ -285,6 +285,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
 				ele.Languages = langs
 			}
 			f := form.NewLangSet(ele.Name, ele.Languages)
+			f.SetHelptext(form.labelFn(ele.HelpText))
 			if len(ele.Template) > 0 {
 				f.SetTemplate(ele.Template)
 			}
@@ -315,6 +316,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
 			f.SetLabelCols(ele.LabelCols)
 			f.SetFieldCols(ele.FieldCols)
 			f.SetLang(lang)
+			f.SetHelptext(form.labelFn(ele.HelpText))
 			es.Elements(f)
 		default:
 			f := form.parseElement(model, ele, t, v)

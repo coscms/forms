@@ -38,6 +38,7 @@ type FieldSetType struct {
 	FieldCols    int                    `json:"fieldCols" xml:"fieldCols"`
 	Classes      common.HTMLAttrValues  `json:"classes" xml:"classes"`
 	Tags         common.HTMLAttrValues  `json:"tags" xml:"tags"`
+	Helptext     string                 `json:"helpText" xml:"helpText"`
 	FieldList    []config.FormElement   `json:"fieldList" xml:"fieldList"`
 	AppendData   map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
 	FormTheme    string                 `json:"formTheme" xml:"formTheme"`
@@ -54,6 +55,12 @@ func (f *FieldSetType) Cols() int {
 
 func (f *FieldSetType) SetData(key string, value interface{}) {
 	f.AppendData[key] = value
+}
+
+// SetHelptext saves the field helptext.
+func (f *FieldSetType) SetHelptext(text string) *FieldSetType {
+	f.Helptext = text
+	return f
 }
 
 func (f *FieldSetType) SetLabelCols(cols int) {
@@ -86,6 +93,7 @@ func (f *FieldSetType) Data() map[string]interface{} {
 		"groups":    config.SplitGroup(f.FieldList),
 		"classes":   f.Classes,
 		"tags":      f.Tags,
+		"helptext":  f.Helptext,
 	}
 	for k, v := range f.AppendData {
 		f.data[k] = v
