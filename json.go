@@ -601,6 +601,9 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 	}
 	f.SetHelptext(form.labelFn(ele.HelpText))
 	f.SetLabel(form.labelFn(ele.Label))
+	for _, labelClass := range ele.LabelClasses {
+		f.AddLabelClass(labelClass)
+	}
 	f.SetTemplate(ele.Template)
 	f.SetID(ele.ID)
 	if len(ele.Valid) > 0 {

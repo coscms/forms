@@ -3,22 +3,23 @@ package config
 import "strings"
 
 type Element struct {
-	ID         string                 `json:"id"`
-	Type       string                 `json:"type"`
-	Name       string                 `json:"name"`
-	Label      string                 `json:"label"`
-	LabelCols  int                    `json:"labelCols,omitempty"`
-	FieldCols  int                    `json:"fieldCols,omitempty"`
-	Value      string                 `json:"value"`
-	HelpText   string                 `json:"helpText"`
-	Template   string                 `json:"template"`
-	Valid      string                 `json:"valid"`
-	Attributes [][]string             `json:"attributes"`
-	Choices    []*Choice              `json:"choices"`
-	Elements   []*Element             `json:"elements"`
-	Format     string                 `json:"format"`
-	Languages  []*Language            `json:"languages,omitempty"`
-	Data       map[string]interface{} `json:"data,omitempty"`
+	ID           string                 `json:"id"`
+	Type         string                 `json:"type"`
+	Name         string                 `json:"name"`
+	Label        string                 `json:"label"`
+	LabelCols    int                    `json:"labelCols,omitempty"`
+	FieldCols    int                    `json:"fieldCols,omitempty"`
+	LabelClasses []string               `json:"labelClasses,omitempty"`
+	Value        string                 `json:"value"`
+	HelpText     string                 `json:"helpText"`
+	Template     string                 `json:"template"`
+	Valid        string                 `json:"valid"`
+	Attributes   [][]string             `json:"attributes"`
+	Choices      []*Choice              `json:"choices"`
+	Elements     []*Element             `json:"elements"`
+	Format       string                 `json:"format"`
+	Languages    []*Language            `json:"languages,omitempty"`
+	Data         map[string]interface{} `json:"data,omitempty"`
 }
 
 func (e *Element) Cols() int {
@@ -39,25 +40,29 @@ func (e *Element) Clone() *Element {
 		choices[index] = value.Clone()
 	}
 	r := &Element{
-		ID:         e.ID,
-		Type:       e.Type,
-		Name:       e.Name,
-		Label:      e.Label,
-		LabelCols:  e.LabelCols,
-		FieldCols:  e.FieldCols,
-		Value:      e.Value,
-		HelpText:   e.HelpText,
-		Template:   e.Template,
-		Valid:      e.Valid,
-		Attributes: make([][]string, len(e.Attributes)),
-		Choices:    choices,
-		Elements:   elements,
-		Format:     e.Format,
-		Languages:  languages,
-		Data:       map[string]interface{}{},
+		ID:           e.ID,
+		Type:         e.Type,
+		Name:         e.Name,
+		Label:        e.Label,
+		LabelCols:    e.LabelCols,
+		FieldCols:    e.FieldCols,
+		LabelClasses: make([]string, len(e.LabelClasses)),
+		Value:        e.Value,
+		HelpText:     e.HelpText,
+		Template:     e.Template,
+		Valid:        e.Valid,
+		Attributes:   make([][]string, len(e.Attributes)),
+		Choices:      choices,
+		Elements:     elements,
+		Format:       e.Format,
+		Languages:    languages,
+		Data:         map[string]interface{}{},
 	}
 	for k, v := range e.Data {
 		r.Data[k] = v
+	}
+	if len(e.LabelClasses) > 0 {
+		copy(r.LabelClasses, e.LabelClasses)
 	}
 	for k, v := range e.Attributes {
 		cv := make([]string, len(v))
@@ -101,6 +106,11 @@ func (e *Element) AddAttribute(attributes ...string) *Element {
 
 func (e *Element) AddChoice(choices ...*Choice) *Element {
 	e.Choices = append(e.Choices, choices...)
+	return e
+}
+
+func (e *Element) AddLabelClass(labelClasses ...string) *Element {
+	e.LabelClasses = append(e.LabelClasses, labelClasses...)
 	return e
 }
 
