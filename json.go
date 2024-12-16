@@ -229,9 +229,6 @@ func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) 
 	if model == nil {
 		model = form.Model
 	}
-	if model == nil {
-		return form
-	}
 	t := reflect.TypeOf(model)
 	v := reflect.ValueOf(model)
 	if t != nil && t.Kind() == reflect.Ptr {
@@ -617,7 +614,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 	return f
 }
 
-func (form *Form) validElement(ele *config.Element, typ reflect.Type, val reflect.Value) bool {
+func (form *Form) validElement(ele *config.Element, _ reflect.Type, val reflect.Value) bool {
 	if len(ele.Valid) == 0 {
 		return true
 	}
