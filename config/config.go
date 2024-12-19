@@ -94,6 +94,7 @@ func (c *Config) Merge(source *Config) *Config {
 			for _, v2 := range c.Elements {
 				if v.Name == v2.Name {
 					found = true
+					v2.Merge(v)
 					break
 				}
 			}
