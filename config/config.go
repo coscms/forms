@@ -24,7 +24,7 @@ type Config struct {
 	Template       string                 `json:"template"`
 	Method         string                 `json:"method"`
 	Action         string                 `json:"action"`
-	Attributes     [][]string             `json:"attributes"`
+	Attributes     [][]string             `json:"attributes"` //
 	WithButtons    bool                   `json:"withButtons"`
 	Buttons        []string               `json:"buttons"`
 	BtnsTemplate   string                 `json:"btnsTemplate"`
@@ -32,6 +32,105 @@ type Config struct {
 	Languages      []*Language            `json:"languages"`
 	Data           map[string]interface{} `json:"data,omitempty"`
 	TrimNamePrefix string                 `json:"trimNamePrefix,omitempty"`
+}
+
+func (c *Config) Merge(source *Config) *Config {
+	if len(c.ID) == 0 && len(source.ID) > 0 {
+		c.ID = source.ID
+	}
+	if len(c.Theme) == 0 && len(source.Theme) > 0 {
+		c.Theme = source.Theme
+	}
+	if len(c.Template) == 0 && len(source.Template) > 0 {
+		c.Template = source.Template
+	}
+	if len(c.Method) == 0 && len(source.Method) > 0 {
+		c.Method = source.Method
+	}
+	if len(c.Action) == 0 && len(source.Action) > 0 {
+		c.Action = source.Action
+	}
+	var found bool
+	for _, v := range source.Attributes {
+		if len(v) == 0 {
+			continue
+		}
+		for _, v2 := range c.Attributes {
+			if len(v2) == 0 {
+				continue
+			}
+			if v2[0] == v[0] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.Attributes = append(c.Attributes, v)
+		} else {
+			found = false
+		}
+	}
+	for _, v := range source.Buttons {
+		for _, v2 := range c.Buttons {
+			if v == v2 {
+				found = true
+				break
+			}
+		}
+		if !found {
+			c.Buttons = append(c.Buttons, v)
+		} else {
+			found = false
+		}
+	}
+	if c.WithButtons != source.WithButtons {
+		c.WithButtons = source.WithButtons
+	}
+	if len(c.BtnsTemplate) == 0 && len(source.BtnsTemplate) > 0 {
+		c.BtnsTemplate = source.BtnsTemplate
+	}
+	for _, v := range source.Elements {
+		if len(v.Name) > 0 {
+			for _, v2 := range c.Elements {
+				if v.Name == v2.Name {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			c.Elements = append(c.Elements, v)
+		} else {
+			found = false
+		}
+	}
+	for _, v := range source.Languages {
+		if len(v.ID) > 0 {
+			for _, v2 := range c.Languages {
+				if v.ID == v2.ID {
+					found = true
+					break
+				}
+			}
+		}
+		if !found {
+			c.Languages = append(c.Languages, v)
+		} else {
+			found = false
+		}
+	}
+	if source.Data != nil {
+		if c.Data == nil {
+			c.Data = map[string]interface{}{}
+		}
+		for k, v := range source.Data {
+			c.Data[k] = v
+		}
+	}
+	if len(c.TrimNamePrefix) == 0 && len(source.TrimNamePrefix) > 0 {
+		c.TrimNamePrefix = source.TrimNamePrefix
+	}
+	return c
 }
 
 func (c *Config) AddElement(elements ...*Element) *Config {
