@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/url"
+	"path"
 	"reflect"
 	"strconv"
 	"strings"
@@ -250,9 +251,15 @@ func (f *Form) HTMLTemplate() (*template.Template, error) {
 		tmpl = f.config.Template
 	}
 	if len(tmpl) == 0 {
-		tmpl = common.TmplDir(f.Theme) + `/baseform.html`
-		//tmpl = common.TmplDir(f.Theme) + `/allfields.html`
+		tmpl = `baseform.html`
+		//tmpl = `allfields.html`
+	} else {
+		if !strings.HasSuffix(tmpl, `.html`) {
+			tmpl += `.html`
+		}
 	}
+	dir := common.TmplDir(f.Theme)
+	tmpl = path.Join(dir, tmpl)
 	return common.GetOrSetCachedTemplate(tmpl, func() (*template.Template, error) {
 		return common.ParseFiles(common.LookupPath(tmpl))
 	})
