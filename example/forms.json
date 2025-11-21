@@ -21,13 +21,13 @@
                 {
                     "type":"text",
                     "name":"user1",
-                    "lable":"User Name1",
+                    "label":"User Name1",
                     "value":""
                 },
                 {
                     "type":"text",
                     "name":"user2",
-                    "lable":"User Name2",
+                    "label":"User Name2",
                     "value":""
                 }
             ]
@@ -46,8 +46,8 @@
         },
         {
             "type":"langset",
-            "name":"title",
-            "label":"Title",
+            //"name":"title",
+            //"label":"Title",
             "languages":[
                 {
                     "id":"en",
@@ -78,11 +78,11 @@
                     "elements":[
                         {
                             "type":"text",
-                            "name":"meta_title",
+                            "name":"metaTitle",
                             "label":"SEO标题"
                         },{
                             "type":"text",
-                            "name":"meta_kewwords",
+                            "name":"metaKeywords",
                             "label":"SEO关键词"
                         }
                     ]

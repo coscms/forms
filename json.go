@@ -18,6 +18,7 @@ package forms
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -50,7 +51,7 @@ func UnmarshalFile(filename string) (r *config.Config, err error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(`cache form config:`, filename)
+		log.Println(`cache form config:`, filename)
 		return r, nil
 	})
 }
@@ -62,7 +63,7 @@ func Unmarshal(b []byte, key string) (r *config.Config, err error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(`cache form config:`, key)
+		log.Println(`cache form config:`, key)
 		return r, nil
 	})
 }

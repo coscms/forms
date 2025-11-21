@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	. "github.com/coscms/forms"
@@ -24,10 +25,10 @@ var expected = []string{
 	"Language[zh-CN][title]",
 	"Language[en][content]",
 	"Language[zh-CN][content]",
-	"Language[en][meta_title]",
-	"Language[zh-CN][meta_title]",
-	"Language[en][meta_kewwords]",
-	"Language[zh-CN][meta_kewwords]",
+	"Language[en][metaTitle]",
+	"Language[zh-CN][metaTitle]",
+	"Language[en][metaKeywords]",
+	"Language[zh-CN][metaKeywords]",
 }
 
 func main() {
@@ -49,7 +50,13 @@ func main() {
 		}
 	}
 	form := NewWithModelConfig(t, config)
-	fmt.Println(form.Render())
+	htmlResult := form.Render()
+	fmt.Println(htmlResult)
+	os.Mkdir(`_test`, os.ModePerm)
+	os.WriteFile(`_test/test.html`, []byte(`<html><head>
+	<link rel="stylesheet" href="https://www.coscms.com/public/assets/backend/js/bootstrap/dist/css/bootstrap.min.css?t=0" />
+	</head><body><div class="container">`+htmlResult+`</div><script src="https://www.coscms.com/public/assets/backend/js/jquery3.6.min.js?t=0"></script>
+	<script type="text/javascript" src="https://www.coscms.com/public/assets/backend/js/bootstrap/dist/js/bootstrap.min.js?t=0"></script></body></html>`), os.ModePerm)
 	//return
 	fmt.Println(`1.________________________________________CostTime:`, time.Since(startTime).Seconds(), `s`)
 	fmt.Println(``)

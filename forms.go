@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 	"net/url"
 	"path"
 	"reflect"
@@ -550,7 +551,7 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 						f.SetParam(k, v[0])
 					}
 				} else {
-					fmt.Println(err)
+					log.Println(err)
 				}
 			}
 			valid := common.TagVal(t, i, "valid")
