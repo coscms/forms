@@ -28,6 +28,7 @@ import (
 
 	"github.com/admpub/json5"
 
+	"github.com/webx-top/com"
 	"github.com/webx-top/tagfast"
 
 	"github.com/coscms/forms/common"
@@ -370,7 +371,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 				}
 				value = value.Index(index)
 			case reflect.Struct:
-				field = strings.Title(field)
+				field = com.Title(field)
 				value = value.FieldByName(field)
 			default:
 				isValid = false
@@ -397,7 +398,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 		}
 	}
 	isStruct := typ != nil && typ.Kind() == reflect.Struct
-	structFieldName := strings.Title(form.cleanName(ele.Name))
+	structFieldName := com.Title(form.cleanName(ele.Name))
 	switch ele.Type {
 	case common.DATE:
 		dateFormat := fields.DATE_FORMAT
@@ -623,7 +624,7 @@ func (form *Form) validElement(ele *config.Element, _ reflect.Type, val reflect.
 	value := val
 	isValid := true
 	for _, field := range parts {
-		field = strings.Title(field)
+		field = com.Title(field)
 		if value.Kind() == reflect.Ptr {
 			if value.IsNil() {
 				value.Set(reflect.New(value.Type().Elem()))

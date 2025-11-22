@@ -36,6 +36,7 @@ import (
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/config"
 	"github.com/coscms/forms/fields"
+	"github.com/webx-top/com"
 	"github.com/webx-top/validation"
 )
 
@@ -361,17 +362,17 @@ func (f *Form) ParseModel(model ...interface{}) *Form {
 func (f *Form) AddButton(tmpl string, args ...string) *Form {
 	btnFields := make([]config.FormElement, 0, 3)
 	if len(args) < 1 {
-		btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")))
-		btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")))
+		btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")).SetTemplate(`button`).SetTheme(f.Theme))
+		btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")).SetTemplate(`button`).SetTheme(f.Theme))
 	} else {
 		for _, field := range args {
 			switch field {
 			case `submit`:
-				btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")))
+				btnFields = append(btnFields, fields.SubmitButton("submit", f.labelFn("Submit")).SetTemplate(`button`).SetTheme(f.Theme))
 			case `reset`:
-				btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")))
+				btnFields = append(btnFields, fields.ResetButton("reset", f.labelFn("Reset")).SetTemplate(`button`).SetTheme(f.Theme))
 			default:
-				btnFields = append(btnFields, fields.Button(field, f.labelFn(strings.Title(field))))
+				btnFields = append(btnFields, fields.Button(field, f.labelFn(com.Title(field))).SetTemplate(`button`).SetTheme(f.Theme))
 			}
 		}
 	}
@@ -533,7 +534,7 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 		if f != nil {
 			label := common.TagVal(t, i, "form_label")
 			if len(label) == 0 {
-				label = strings.Title(t.Field(i).Name)
+				label = com.Title(t.Field(i).Name)
 			} else if label != `-` {
 				label = form.labelFn(label)
 			} else {
@@ -676,6 +677,8 @@ func (f *Form) Elements(elems ...config.FormElement) {
 			f.addFieldSet(v)
 		case *LangSetType:
 			f.addLangSet(v)
+		default:
+			log.Printf("[Form] Unsupported element type: %T\n", v)
 		}
 	}
 }
