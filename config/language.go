@@ -9,15 +9,17 @@ func NewLanguage(lang, label, namefmt string) *Language {
 		ID:         lang,
 		Label:      label,
 		NameFormat: namefmt,
+		Data:       map[string]interface{}{},
 		fields:     make([]FormElement, 0),
 		fieldMap:   make(map[string]int),
 	}
 }
 
 type Language struct {
-	ID         string `json:"id"`
-	Label      string `json:"label"`
-	NameFormat string `json:"nameFormat"`
+	ID         string                 `json:"id"`
+	Label      string                 `json:"label"`
+	NameFormat string                 `json:"nameFormat"`
+	Data       map[string]interface{} `json:"data,omitempty"`
 	fields     []FormElement
 	fieldMap   map[string]int
 }
@@ -73,11 +75,22 @@ func (l *Language) Groups() Groups {
 	return SplitGroup(l.fields)
 }
 
+func (l *Language) Set(name string, value interface{}) *Language {
+	if l.Data == nil {
+		l.Data = map[string]interface{}{}
+	}
+	l.Data[name] = value
+	return l
+}
+
 func (l *Language) Clone() *Language {
 	lg := NewLanguage(l.ID, l.Label, l.NameFormat)
 	copy(lg.fields, l.fields)
 	for k, v := range l.fieldMap {
 		lg.fieldMap[k] = v
+	}
+	for k, v := range l.Data {
+		lg.Data[k] = v
 	}
 	return lg
 }
