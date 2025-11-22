@@ -1,11 +1,13 @@
-package forms
+package forms_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/coscms/forms"
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/config"
+	_ "github.com/coscms/forms/defaults"
 	"github.com/webx-top/com"
 )
 
@@ -33,7 +35,7 @@ func TestForms(t *testing.T) {
 			},
 		},
 	}
-	cfg := NewConfig()
+	cfg := forms.NewConfig()
 	cfg.AddElement(&config.Element{
 		ID:    `input-name`,
 		Type:  `text`,
@@ -65,7 +67,7 @@ func TestForms(t *testing.T) {
 		Name:  `listData.0.test`,
 		Label: `ListData 0`,
 	})
-	form := NewWithModelConfig(mp, cfg)
+	form := forms.NewWithModelConfig(mp, cfg)
 	com.Dump(form.Data())
 	result := form.String()
 	fmt.Println(result)
@@ -81,7 +83,7 @@ func TestParseConfig(t *testing.T) {
 			},
 		},
 	}
-	f := NewForms(New())
+	f := forms.NewForms(forms.New())
 	f.Theme = common.BOOTSTRAP
 	f.Init(&cfg)
 	f.ParseFromConfig(true)
