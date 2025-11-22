@@ -19,19 +19,19 @@
 package config
 
 type Config struct {
-	ID             string                 `json:"id"`
-	Theme          string                 `json:"theme"`
-	Template       string                 `json:"template"`
-	Method         string                 `json:"method"`
-	Action         string                 `json:"action"`
-	Attributes     [][]string             `json:"attributes"` //
-	WithButtons    bool                   `json:"withButtons"`
-	Buttons        []string               `json:"buttons"`
-	BtnsTemplate   string                 `json:"btnsTemplate"`
-	Elements       []*Element             `json:"elements"`
-	Languages      []*Language            `json:"languages"`
-	Data           map[string]interface{} `json:"data,omitempty"`
-	TrimNamePrefix string                 `json:"trimNamePrefix,omitempty"`
+	ID             string                 `json:"id"`                       // 表单ID，用于区分不同表单
+	Theme          string                 `json:"theme"`                    // 表单主题
+	Template       string                 `json:"template"`                 // 表单模板
+	Method         string                 `json:"method"`                   // 表单提交方法
+	Action         string                 `json:"action"`                   // 表单提交地址
+	Attributes     [][]string             `json:"attributes"`               // 表单属性
+	WithButtons    bool                   `json:"withButtons"`              // 是否显示表单按钮
+	Buttons        []string               `json:"buttons"`                  // 表单按钮
+	BtnsTemplate   string                 `json:"btnsTemplate"`             // 表单按钮模板
+	Elements       []*Element             `json:"elements"`                 // 表单元素
+	Languages      []*Language            `json:"languages"`                // 表单多语言支持
+	Data           map[string]interface{} `json:"data,omitempty"`           // 额外数据
+	TrimNamePrefix string                 `json:"trimNamePrefix,omitempty"` // 去除字段名前缀
 }
 
 func (c *Config) Merge(source *Config) *Config {

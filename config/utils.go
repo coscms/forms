@@ -1,5 +1,7 @@
 package config
 
+import "github.com/coscms/forms/fields"
+
 const (
 	STATIC   = "static"
 	Disabled = "disabled"
@@ -50,6 +52,9 @@ func setDefaultValue(elements []*Element, languages []*Language, fieldDefaultVal
 			}
 			for _, lang := range languages {
 				elem.Value = fieldDefaultValue(lang.Name(elem.Name))
+				if field, ok := lang.Field(elem.Name).(fields.FieldInterface); ok {
+					field.SetValue(elem.Value)
+				}
 			}
 		}
 	}
