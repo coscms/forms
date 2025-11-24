@@ -139,7 +139,7 @@ func (form *Form) ValidFromConfig(model ...interface{}) *Form {
 	}
 	t := reflect.TypeOf(m)
 	v := reflect.ValueOf(m)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 		v = v.Elem()
 	}
@@ -233,7 +233,7 @@ func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) 
 	}
 	t := reflect.TypeOf(model)
 	v := reflect.ValueOf(model)
-	if t != nil && t.Kind() == reflect.Ptr {
+	if t != nil && t.Kind() == reflect.Pointer {
 		t = t.Elem()
 		v = v.Elem()
 	}
@@ -352,7 +352,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 		parts := form.parseNameToStructFieldName(ele.Name)
 		isValid := true
 		for _, field := range parts {
-			if value.Kind() == reflect.Ptr {
+			if value.Kind() == reflect.Pointer {
 				if value.IsNil() {
 					isValid = false
 					break
@@ -625,7 +625,7 @@ func (form *Form) validElement(ele *config.Element, _ reflect.Type, val reflect.
 	isValid := true
 	for _, field := range parts {
 		field = com.Title(field)
-		if value.Kind() == reflect.Ptr {
+		if value.Kind() == reflect.Pointer {
 			if value.IsNil() {
 				value.Set(reflect.New(value.Type().Elem()))
 			}

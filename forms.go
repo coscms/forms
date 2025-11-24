@@ -419,7 +419,7 @@ func (f *Form) GenChoices(lenType interface{}, fnType interface{}) interface{} {
 func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}, string) {
 	t := reflect.TypeOf(m)
 	v := reflect.ValueOf(m)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 		v = v.Elem()
 	}
@@ -514,7 +514,7 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 				f = nil
 			default:
 				if t.Field(i).Type.Kind() == reflect.Struct ||
-					(t.Field(i).Type.Kind() == reflect.Ptr &&
+					(t.Field(i).Type.Kind() == reflect.Pointer &&
 						t.Field(i).Type.Elem().Kind() == reflect.Struct) {
 					fl, fs := form.unWindStructure(v.Field(i).Interface(), fName)
 					if len(fs) > 0 {
