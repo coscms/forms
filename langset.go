@@ -217,6 +217,11 @@ func (f *LangSetType) addField(field fields.FieldInterface) *LangSetType {
 			continue
 		}
 		fieldCopy := field.Clone()
+		if v, y := fieldCopy.(*fields.Field); y {
+			if len(v.ID) > 0 {
+				v.SetID(v.ID + `_` + language.ID)
+			}
+		}
 		fieldCopy.SetLang(language.ID)
 		fieldCopy.SetName(language.Name(fieldCopy.OriginalName()))
 		language.AddField(fieldCopy)

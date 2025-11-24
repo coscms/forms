@@ -63,6 +63,7 @@
             ],
             "elements":[
                 {
+                    "id":"title",
                     "type":"text",
                     "name":"title",
                     "label":"标题"

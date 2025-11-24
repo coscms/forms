@@ -75,6 +75,9 @@ func setValue(elements []*Element, languages []*Language, fieldValue func(string
 			}
 			for _, lang := range languages {
 				elem.Value = fieldValue(lang.Name(elem.Name))
+				if field, ok := lang.Field(elem.Name).(FieldInterface); ok {
+					field.SetValue(elem.Value)
+				}
 			}
 		}
 	}

@@ -328,9 +328,7 @@ func (f *Field) SingleChoice() FieldInterface {
 		f.RemoveTag("multiple")
 		fallthrough
 	case common.CHECKBOX:
-		if strings.HasSuffix(f.CurrName, "[]") {
-			f.CurrName = strings.TrimSuffix(f.CurrName, "[]")
-		}
+		f.CurrName = strings.TrimSuffix(f.CurrName, "[]")
 	}
 	return f
 }
@@ -578,7 +576,7 @@ func (f *Field) Element() *config.Element {
 		Elements:   make([]*config.Element, 0),
 		Format:     f.Format,
 	}
-	if f.AppendData != nil && len(f.AppendData) > 0 {
+	if len(f.AppendData) > 0 {
 		elem.Data = f.AppendData
 	}
 	var (
