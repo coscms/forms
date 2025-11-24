@@ -80,6 +80,7 @@
                     "label":"meta",
                     "elements":[
                         {
+                            "id":"metaTitle",
                             "type":"text",
                             "name":"metaTitle",
                             "label":"SEO标题"

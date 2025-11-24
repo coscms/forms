@@ -269,6 +269,11 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 		fsCopy.FieldList = make([]config.FormElement, len(fs.FieldList))
 		for kk, v := range fs.FieldList {
 			fieldCopy := v.Clone()
+			if v, y := fieldCopy.(*fields.Field); y {
+				if len(v.ID) > 0 {
+					v.SetID(v.ID + `_` + language.ID)
+				}
+			}
 			fieldCopy.SetLang(language.ID)
 			fieldCopy.SetName(language.Name(fieldCopy.OriginalName()))
 			key := fieldCopy.Lang() + `:` + fieldCopy.OriginalName()
