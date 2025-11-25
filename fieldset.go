@@ -221,6 +221,18 @@ func (f *FieldSetType) addLangSet(fs *LangSetType) *FieldSetType {
 	return f
 }
 
+func (f *FieldSetType) FieldMap() map[string]config.FormElement {
+	r := map[string]config.FormElement{}
+	for k, v := range f.fieldMap {
+		r[k] = f.FieldList[v]
+	}
+	return r
+}
+
+func (f *FieldSetType) Fields() []config.FormElement {
+	return f.FieldList
+}
+
 func (f *FieldSetType) addField(field fields.FieldInterface) *FieldSetType {
 	field.SetTheme(f.FormTheme)
 	field.SetData(`container`, `fieldset`)

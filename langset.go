@@ -196,6 +196,18 @@ func (f *LangSetType) Elements(elems ...config.FormElement) {
 	}
 }
 
+func (f *LangSetType) FieldMap() map[string]config.FormElement {
+	return f.fieldMap
+}
+
+func (f *LangSetType) Fields() []config.FormElement {
+	r := []config.FormElement{}
+	for _, language := range f.Languages {
+		r = append(r, language.Fields()...)
+	}
+	return r
+}
+
 func (f *LangSetType) addField(field fields.FieldInterface) *LangSetType {
 	field.SetTheme(f.FormTheme)
 	if f.Alone {
