@@ -51,7 +51,7 @@ func setDefaultValue(elements []*Element, languages []*Language, fieldDefaultVal
 			for _, lang := range languages {
 				elem.Value = fieldDefaultValue(lang.Name(elem.Name))
 				if field, ok := lang.Field(elem.Name).(FieldInterface); ok {
-					field.SetValue(elem.Value)
+					field.SetValue(elem.Value).SetText(elem.Value)
 				}
 			}
 		}
@@ -76,7 +76,7 @@ func setValue(elements []*Element, languages []*Language, fieldValue func(string
 			for _, lang := range languages {
 				elem.Value = fieldValue(lang.Name(elem.Name))
 				if field, ok := lang.Field(elem.Name).(FieldInterface); ok {
-					field.SetValue(elem.Value)
+					field.SetValue(elem.Value).SetText(elem.Value)
 				}
 			}
 		}
