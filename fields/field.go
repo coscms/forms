@@ -171,6 +171,7 @@ func (f *Field) Data() map[string]interface{} {
 		"errors":       f.Errors,
 		"container":    "form",
 		"choices":      f.Choices,
+		"lang":         f.Language,
 	}
 	for k, v := range f.Additional {
 		f.data[k] = v

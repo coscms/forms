@@ -94,6 +94,7 @@ func (f *FieldSetType) Data() map[string]interface{} {
 		"classes":   f.Classes,
 		"tags":      f.Tags,
 		"helptext":  f.Helptext,
+		"lang":      f.Language,
 	}
 	for k, v := range f.AppendData {
 		f.data[k] = v

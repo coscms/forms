@@ -25,10 +25,21 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+
+	"github.com/webx-top/com"
 )
 
 var TplFuncs = func() template.FuncMap {
-	return template.FuncMap{}
+	return template.FuncMap{
+		`RandomString`: RandomString,
+	}
+}
+
+func RandomString(length ...uint) string {
+	if len(length) > 0 && length[0] > 0 {
+		return com.RandomAlphanumeric(length[0])
+	}
+	return com.RandomAlphanumeric(8)
 }
 
 func ParseFiles(files ...string) (*template.Template, error) {
