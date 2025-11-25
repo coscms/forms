@@ -85,7 +85,10 @@ func (l *Language) Set(name string, value interface{}) *Language {
 
 func (l *Language) Clone() *Language {
 	lg := NewLanguage(l.ID, l.Label, l.NameFormat)
-	copy(lg.fields, l.fields)
+	lg.fields = make([]FormElement, len(l.fields))
+	for i, f := range l.fields {
+		lg.fields[i] = f.Clone()
+	}
 	for k, v := range l.fieldMap {
 		lg.fieldMap[k] = v
 	}

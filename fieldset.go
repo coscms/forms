@@ -136,7 +136,37 @@ func (f *FieldSetType) Lang() string {
 }
 
 func (f *FieldSetType) Clone() config.FormElement {
-	fc := *f
+	fc := FieldSetType{
+		OrigName:     f.OrigName,
+		CurrName:     f.CurrName,
+		Label:        f.Label,
+		LabelCols:    f.LabelCols,
+		FieldCols:    f.FieldCols,
+		Classes:      f.Classes.Clone(),
+		Tags:         f.Tags.Clone(),
+		Helptext:     f.Helptext,
+		FieldList:    make([]config.FormElement, len(f.FieldList)),
+		AppendData:   make(map[string]interface{}, len(f.AppendData)),
+		FormTheme:    f.FormTheme,
+		Language:     f.Language,
+		Template:     f.Template,
+		fieldMap:     make(map[string]int, len(f.fieldMap)),
+		containerMap: make(map[string]string, len(f.containerMap)),
+		data:         make(map[string]interface{}, len(f.data)),
+	}
+	copy(fc.FieldList, f.FieldList)
+	for k, v := range f.fieldMap {
+		fc.fieldMap[k] = v
+	}
+	for k, v := range f.containerMap {
+		fc.containerMap[k] = v
+	}
+	for k, v := range f.AppendData {
+		fc.AppendData[k] = v
+	}
+	for k, v := range f.data {
+		fc.data[k] = v
+	}
 	return &fc
 }
 

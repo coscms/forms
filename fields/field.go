@@ -112,7 +112,63 @@ func (f *Field) OriginalName() string {
 }
 
 func (f *Field) Clone() config.FormElement {
-	fc := *f
+	fc := Field{
+		Type:         f.Type,
+		Template:     f.Template,
+		CurrName:     f.CurrName,
+		OrigName:     f.OrigName,
+		Classes:      f.Classes.Clone(),
+		ID:           f.ID,
+		Params:       make(map[string]interface{}, len(f.Params)),
+		CSS:          make(map[string]string, len(f.CSS)),
+		Label:        f.Label,
+		LabelCols:    f.LabelCols,
+		FieldCols:    f.FieldCols,
+		LabelClasses: f.LabelClasses.Clone(),
+		Tags:         f.Tags.Clone(),
+		Value:        f.Value,
+		Helptext:     f.Helptext,
+		Errors:       make([]string, len(f.Errors)),
+		Additional:   make(map[string]interface{}, len(f.Additional)),
+		Choices:      f.Choices,
+		ChoiceKeys:   make(map[string]ChoiceIndex, len(f.ChoiceKeys)),
+		AppendData:   make(map[string]interface{}, len(f.AppendData)),
+		Theme:        f.Theme,
+		Format:       f.Format,
+		Language:     f.Language,
+		widget:       f.widget,
+		data:         make(map[string]interface{}, len(f.data)),
+	}
+	switch chs := f.Choices.(type) {
+	case map[string][]InputChoice:
+		choices := make(map[string][]InputChoice, len(chs))
+		for k, v := range chs {
+			c := make([]InputChoice, len(v))
+			copy(c, v)
+			choices[k] = c
+		}
+		fc.Choices = choices
+	case []InputChoice:
+		c := make([]InputChoice, len(chs))
+		copy(c, chs)
+		fc.Choices = c
+	}
+	for k, v := range f.Params {
+		fc.Params[k] = v
+	}
+	for k, v := range f.CSS {
+		fc.CSS[k] = v
+	}
+	copy(fc.Errors, f.Errors)
+	for k, v := range f.Additional {
+		fc.Additional[k] = v
+	}
+	for k, v := range f.ChoiceKeys {
+		fc.ChoiceKeys[k] = v
+	}
+	for k, v := range f.AppendData {
+		fc.AppendData[k] = v
+	}
 	return &fc
 }
 

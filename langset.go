@@ -66,7 +66,44 @@ func (f *LangSetType) Lang() string {
 }
 
 func (f *LangSetType) Clone() config.FormElement {
-	fc := *f
+	fc := LangSetType{
+		Languages:  make([]*config.Language, len(f.Languages)),
+		CurrName:   f.CurrName,
+		OrigName:   f.OrigName,
+		Template:   f.Template,
+		Params:     make(map[string]interface{}, len(f.Params)),
+		Tags:       f.Tags.Clone(),
+		Helptext:   f.Helptext,
+		AppendData: make(map[string]interface{}, len(f.AppendData)),
+		Alone:      f.Alone,
+		FormTheme:  f.FormTheme,
+
+		langMap:      make(map[string]int, len(f.langMap)),
+		fieldMap:     make(map[string]config.FormElement, len(f.fieldMap)),
+		containerMap: make(map[string]string, len(f.containerMap)),
+		data:         make(map[string]interface{}, len(f.data)),
+	}
+	for i, l := range f.Languages {
+		fc.Languages[i] = l.Clone()
+	}
+	for k, v := range f.Params {
+		fc.Params[k] = v
+	}
+	for k, v := range f.langMap {
+		fc.langMap[k] = v
+	}
+	for k, v := range f.fieldMap {
+		fc.fieldMap[k] = v
+	}
+	for k, v := range f.containerMap {
+		fc.containerMap[k] = v
+	}
+	for k, v := range f.AppendData {
+		fc.AppendData[k] = v
+	}
+	for k, v := range f.data {
+		fc.data[k] = v
+	}
 	return &fc
 }
 

@@ -7,11 +7,7 @@ import (
 	"github.com/webx-top/com"
 )
 
-type (
-	HTMLAttrValues []string
-	HTMLAttributes map[template.HTMLAttr]interface{}
-	HTMLData       map[string]interface{}
-)
+type HTMLAttrValues []string
 
 func (s HTMLAttrValues) String() string {
 	return strings.Join([]string(s), ` `)
@@ -47,6 +43,14 @@ func (s *HTMLAttrValues) Remove(value string) {
 	}
 }
 
+func (s HTMLAttrValues) Clone() HTMLAttrValues {
+	data := make(HTMLAttrValues, len(s))
+	copy(data, s)
+	return data
+}
+
+type HTMLAttributes map[template.HTMLAttr]interface{}
+
 func (s HTMLAttributes) Exists(attr string) bool {
 	_, ok := s[template.HTMLAttr(attr)]
 	return ok
@@ -64,7 +68,25 @@ func (s HTMLAttributes) FillFromStringMap(data map[string]string) {
 	}
 }
 
+func (s HTMLAttributes) Clone() HTMLAttributes {
+	data := HTMLAttributes{}
+	for k, v := range s {
+		data[k] = v
+	}
+	return data
+}
+
+type HTMLData map[string]interface{}
+
 func (s HTMLData) Exists(key string) bool {
 	_, ok := s[key]
 	return ok
+}
+
+func (s HTMLData) Clone() HTMLData {
+	data := HTMLData{}
+	for k, v := range s {
+		data[k] = v
+	}
+	return data
 }
