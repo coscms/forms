@@ -110,6 +110,20 @@ func getValue(elements []*Element, languages []*Language, fieldValue func(string
 	return
 }
 
+func getMultilingualText(elements []*Element, languages []*Language, recv *map[string]struct{}) {
+	for _, elem := range elements {
+		elem.GetMultilingualText(recv)
+		if elem.Type == `langset` || elem.Type == `fieldset` {
+			getMultilingualText(elem.Elements, elem.Languages, recv)
+		}
+	}
+	for _, lang := range languages {
+		if len(lang.Label) > 0 {
+			(*recv)[lang.Label] = struct{}{}
+		}
+	}
+}
+
 func GetCols(labelCols int, fieldCols int) int {
 	return GetLabelCols(labelCols) + GetFieldCols(fieldCols)
 }
@@ -126,4 +140,9 @@ func GetFieldCols(fieldCols int) int {
 		fieldCols = 8
 	}
 	return fieldCols
+}
+
+func IsExistsKey(recv *map[string]struct{}, key string) bool {
+	_, ok := (*recv)[key]
+	return ok
 }

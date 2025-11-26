@@ -1,6 +1,10 @@
 package config
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/webx-top/com"
+)
 
 type Element struct {
 	ID           string                 `json:"id"`
@@ -243,4 +247,31 @@ func (e *Element) Set(name string, value interface{}) *Element {
 	}
 	e.Data[name] = value
 	return e
+}
+
+func (e *Element) GetMultilingualText(recv *map[string]struct{}) {
+	if len(e.Label) > 0 {
+		(*recv)[e.Label] = struct{}{}
+	}
+	if len(e.HelpText) > 0 {
+		(*recv)[e.HelpText] = struct{}{}
+	}
+	for _, v := range e.Attributes {
+		if len(v) == 2 && len(v[0]) > 0 && len(v[1]) > 0 {
+			switch v[0] {
+			case `title`:
+				fallthrough
+			case `placeholder`:
+				(*recv)[v[1]] = struct{}{}
+			}
+		}
+	}
+	for _, v := range e.Choices {
+		if len(v.Group) > 0 && !IsExistsKey(recv, v.Group) && !com.StrIsNumeric(v.Group) {
+			(*recv)[v.Group] = struct{}{}
+		}
+		if len(v.Option) == 2 && len(v.Option[1]) > 0 && !IsExistsKey(recv, v.Option[1]) && !com.StrIsNumeric(v.Option[1]) {
+			(*recv)[v.Option[1]] = struct{}{}
+		}
+	}
 }

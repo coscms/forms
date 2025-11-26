@@ -28,6 +28,7 @@ import (
 	"github.com/coscms/forms/common"
 	"github.com/coscms/forms/config"
 	"github.com/coscms/forms/widgets"
+	"github.com/webx-top/com"
 )
 
 var _ FieldInterface = (*Field)(nil)
@@ -49,7 +50,7 @@ type Field struct {
 	LabelClasses common.HTMLAttrValues   `json:"labelClasses" xml:"labelClasses"`
 	Tags         common.HTMLAttrValues   `json:"tags" xml:"tags"`
 	Value        string                  `json:"value" xml:"value"`
-	Helptext     string                  `json:"helpText" xml:"helpText"`
+	HelpText     string                  `json:"helpText" xml:"helpText"`
 	Errors       []string                `json:"errors,omitempty" xml:"errors,omitempty"`
 	Additional   map[string]interface{}  `json:"additional,omitempty" xml:"additional,omitempty"`
 	Choices      interface{}             `json:"choices,omitempty" xml:"choices,omitempty"`
@@ -76,7 +77,7 @@ func FieldWithType(name, t string) *Field {
 		LabelClasses: common.HTMLAttrValues{},
 		Tags:         common.HTMLAttrValues{},
 		Value:        "",
-		Helptext:     "",
+		HelpText:     "",
 		Errors:       []string{},
 		Additional:   map[string]interface{}{},
 		Choices:      nil,
@@ -127,7 +128,7 @@ func (f *Field) Clone() config.FormElement {
 		LabelClasses: f.LabelClasses.Clone(),
 		Tags:         f.Tags.Clone(),
 		Value:        f.Value,
-		Helptext:     f.Helptext,
+		HelpText:     f.HelpText,
 		Errors:       make([]string, len(f.Errors)),
 		Additional:   make(map[string]interface{}, len(f.Additional)),
 		Choices:      f.Choices,
@@ -223,7 +224,7 @@ func (f *Field) Data() map[string]interface{} {
 		"labelClasses": f.LabelClasses,
 		"tags":         f.Tags,
 		"value":        f.Value,
-		"helptext":     f.Helptext,
+		"helptext":     f.HelpText,
 		"errors":       f.Errors,
 		"container":    "form",
 		"choices":      f.Choices,
@@ -350,8 +351,8 @@ func (f *Field) SetValue(value string) FieldInterface {
 }
 
 // SetHelptext saves the field helptext.
-func (f *Field) SetHelptext(text string) FieldInterface {
-	f.Helptext = text
+func (f *Field) SetHelpText(text string) FieldInterface {
+	f.HelpText = text
 	return f
 }
 
@@ -625,7 +626,7 @@ func (f *Field) Element() *config.Element {
 		LabelCols:  f.LabelCols,
 		FieldCols:  f.FieldCols,
 		Value:      f.Value,
-		HelpText:   f.Helptext,
+		HelpText:   f.HelpText,
 		Template:   f.Template,
 		Valid:      ``,
 		Attributes: make([][]string, 0),
@@ -689,4 +690,42 @@ func (f *Field) Element() *config.Element {
 
 func (f *Field) HasError() bool {
 	return len(f.Errors) > 0
+}
+
+func (f *Field) GetMultilingualText(recv *map[string]struct{}) {
+	if len(f.Label) > 0 {
+		(*recv)[f.Label] = struct{}{}
+	}
+	if len(f.HelpText) > 0 {
+		(*recv)[f.HelpText] = struct{}{}
+	}
+	for k, v := range f.Params {
+		if str, ok := v.(string); ok && len(str) > 0 {
+			switch k {
+			case `title`:
+				fallthrough
+			case `placeholder`:
+				(*recv)[str] = struct{}{}
+			}
+		}
+	}
+	switch choices := f.Choices.(type) {
+	case map[string][]InputChoice:
+		for group, items := range choices {
+			if len(group) > 0 && !config.IsExistsKey(recv, group) && !com.StrIsNumeric(group) {
+				(*recv)[group] = struct{}{}
+			}
+			for _, v := range items {
+				if len(v.Val) > 0 && !config.IsExistsKey(recv, v.Val) && !com.StrIsNumeric(v.Val) {
+					(*recv)[v.Val] = struct{}{}
+				}
+			}
+		}
+	case []InputChoice:
+		for _, v := range choices {
+			if len(v.Val) > 0 && !config.IsExistsKey(recv, v.Val) && !com.StrIsNumeric(v.Val) {
+				(*recv)[v.Val] = struct{}{}
+			}
+		}
+	}
 }

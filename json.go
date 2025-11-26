@@ -598,7 +598,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 			f.AddTag(v[0])
 		}
 	}
-	f.SetHelptext(form.labelFn(ele.HelpText))
+	f.SetHelpText(form.labelFn(ele.HelpText))
 	f.SetLabel(form.labelFn(ele.Label))
 	for _, labelClass := range ele.LabelClasses {
 		f.AddLabelClass(labelClass)

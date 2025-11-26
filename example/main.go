@@ -38,6 +38,8 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
+	//com.Dump(config.GetMultilingualText())
+	//return
 	t := Test{
 		User:     `webx`,
 		Birthday: `1985`,

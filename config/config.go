@@ -252,3 +252,9 @@ func (c *Config) GetValue(fieldValue func(fieldName string, fieldValue string) e
 	}
 	return nil
 }
+
+func (c *Config) GetMultilingualText() map[string]struct{} {
+	r := map[string]struct{}{}
+	getMultilingualText(c.Elements, c.Languages, &r)
+	return r
+}

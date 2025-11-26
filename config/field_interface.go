@@ -31,7 +31,7 @@ type FieldInterface interface {
 	Disabled() FieldInterface
 	Enabled() FieldInterface
 	SetTemplate(tmpl string, theme ...string) FieldInterface
-	SetHelptext(text string) FieldInterface
+	SetHelpText(text string) FieldInterface
 	AddError(err string) FieldInterface
 	MultipleChoice() FieldInterface
 	SingleChoice() FieldInterface
