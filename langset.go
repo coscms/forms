@@ -341,19 +341,22 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 // MultilingualField returns the field identified by name.
 // names = [fieldsetName, fieldName]
 func (f *LangSetType) MultilingualField(lang string, names ...string) fields.FieldInterface {
-	if len(names) < 2 {
-		return f.Field(names...)
-	}
-	field, ok := f.fieldMap[names[0]]
+	field, ok := f.fieldMap[lang+`:`+names[0]]
 	if !ok {
 		return &fields.Field{}
 	}
 	switch v := field.(type) {
 	case *FieldSetType:
+		if len(names) < 2 {
+			return &fields.Field{}
+		}
 		return v.MultilingualField(lang, names[1:]...)
 	case fields.FieldInterface:
 		return v
 	default:
+		if len(names) < 2 {
+			return &fields.Field{}
+		}
 		return f.MultilingualField(lang, names[1:]...)
 	}
 }
