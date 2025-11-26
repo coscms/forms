@@ -91,16 +91,13 @@ func (f *Field) Cols() int {
 }
 
 func (f *Field) SetTemplate(tmpl string, theme ...string) FieldInterface {
-	f.Template = tmpl
-	if len(f.Template) > 0 && f.widget != nil && f.Template != tmpl {
-		var s string
-		if len(theme) > 0 {
-			s = theme[0]
-		} else {
-			s = f.Theme
-		}
-		f.widget = widgets.BaseWidget(s, f.Type, f.Template)
+	if len(theme) > 0 && len(theme[0]) > 0 {
+		f.Theme = theme[0]
 	}
+	if len(f.Template) > 0 && f.widget != nil && f.Template != tmpl {
+		f.widget = widgets.BaseWidget(f.Theme, f.Type, tmpl)
+	}
+	f.Template = tmpl
 	return f
 }
 
