@@ -39,7 +39,7 @@ type Field struct {
 	Type         string                  `json:"type" xml:"type"`
 	Template     string                  `json:"template" xml:"template"`
 	CurrName     string                  `json:"currName" xml:"currName"`
-	OrigName     string                  `json:"oriName" xml:"oriName"`
+	OrigName     string                  `json:"origName" xml:"origName"`
 	Classes      common.HTMLAttrValues   `json:"classes" xml:"classes"`
 	ID           string                  `json:"id" xml:"id"`
 	Params       map[string]interface{}  `json:"params" xml:"params"`
