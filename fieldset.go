@@ -325,24 +325,53 @@ func (f *FieldSetType) Sort2Last(fieldsName ...string) *FieldSetType {
 	return f
 }
 
-// Field returns the field identified by name. It returns an empty field if it is missing.
-func (f *FieldSetType) Field(name string) fields.FieldInterface {
-	ind, ok := f.fieldMap[name]
+// MultilingualField returns the field identified by name.
+// names = [<fieldsetName|langsetName>, fieldName]
+func (f *FieldSetType) MultilingualField(lang string, names ...string) fields.FieldInterface {
+	if len(names) < 2 {
+		return f.Field(names...)
+	}
+	ind, ok := f.fieldMap[names[0]]
 	if !ok {
 		return &fields.Field{}
 	}
 	switch v := f.FieldList[ind].(type) {
+	case *FieldSetType:
+		return v.MultilingualField(lang, names[1:]...)
+	case *LangSetType:
+		return v.MultilingualField(lang, names[1:]...)
 	case fields.FieldInterface:
 		return v
-	case *FieldSetType:
-		if v, ok := f.containerMap[name]; ok {
-			return f.FieldSet(v).Field(name)
-		}
-	case *LangSetType:
-		if v, ok := f.containerMap[name]; ok {
-			return f.LangSet(v).Field(name)
-		}
+	default:
+		return f.MultilingualField(lang, names[1:]...)
 	}
+}
+
+// Field returns the field identified by name. It returns an empty field if it is missing.
+func (f *FieldSetType) Field(names ...string) fields.FieldInterface {
+	if len(names) < 1 {
+		return &fields.Field{}
+	}
+	ind, ok := f.fieldMap[names[0]]
+	if !ok {
+		return &fields.Field{}
+	}
+	switch field := f.FieldList[ind].(type) {
+	case fields.FieldInterface:
+		return field
+	case *FieldSetType:
+		if len(names) < 2 {
+			goto END
+		}
+		return field.Field(names[1:]...)
+	case *LangSetType:
+		if len(names) < 2 {
+			goto END
+		}
+		return field.Field(names[1:]...)
+	}
+
+END:
 	return &fields.Field{}
 }
 

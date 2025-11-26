@@ -338,10 +338,33 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 	return f
 }
 
+// MultilingualField returns the field identified by name.
+// names = [fieldsetName, fieldName]
+func (f *LangSetType) MultilingualField(lang string, names ...string) fields.FieldInterface {
+	if len(names) < 2 {
+		return f.Field(names...)
+	}
+	field, ok := f.fieldMap[names[0]]
+	if !ok {
+		return &fields.Field{}
+	}
+	switch v := field.(type) {
+	case *FieldSetType:
+		return v.MultilingualField(lang, names[1:]...)
+	case fields.FieldInterface:
+		return v
+	default:
+		return f.MultilingualField(lang, names[1:]...)
+	}
+}
+
 // Field returns the field identified by name. It returns an empty field if it is missing.
 // param format: "language:name"
-func (f *LangSetType) Field(name string) fields.FieldInterface {
-	field, ok := f.fieldMap[name]
+func (f *LangSetType) Field(names ...string) fields.FieldInterface {
+	if len(names) < 1 {
+		return &fields.Field{}
+	}
+	field, ok := f.fieldMap[names[0]]
 	if !ok {
 		return &fields.Field{}
 	}
@@ -349,16 +372,13 @@ func (f *LangSetType) Field(name string) fields.FieldInterface {
 	case fields.FieldInterface:
 		return v
 	case *FieldSetType:
-		if v, ok := f.containerMap[name]; ok {
-			r := strings.SplitN(name, `:`, 2)
-			switch len(r) {
-			case 2:
-				return f.FieldSet(v).Field(r[1])
-			case 1:
-				return f.FieldSet(v).Field(r[0])
-			}
+		if len(names) < 2 {
+			goto END
 		}
+		return v.Field(names[1:]...)
 	}
+
+END:
 	return &fields.Field{}
 }
 
