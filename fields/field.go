@@ -101,6 +101,11 @@ func (f *Field) SetTemplate(tmpl string, theme ...string) FieldInterface {
 	return f
 }
 
+func (f *Field) ReinitTemplate() FieldInterface {
+	f.widget = widgets.BaseWidget(f.Theme, f.Type, f.Template)
+	return f
+}
+
 func (f *Field) SetName(name string) {
 	f.CurrName = name
 }
