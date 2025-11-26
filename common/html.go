@@ -56,6 +56,10 @@ func (s HTMLAttributes) Exists(attr string) bool {
 	return ok
 }
 
+func (s HTMLAttributes) Get(attr string) interface{} {
+	return s[template.HTMLAttr(attr)]
+}
+
 func (s HTMLAttributes) FillFrom(data map[string]interface{}) {
 	for k, v := range data {
 		s[template.HTMLAttr(k)] = v
