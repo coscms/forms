@@ -794,6 +794,14 @@ func (f *Form) Field(name string) fields.FieldInterface {
 	return &fields.Field{}
 }
 
+func (f *Form) FieldMap() map[string]config.FormElement {
+	r := make(map[string]config.FormElement, len(f.fieldMap))
+	for k, v := range f.fieldMap {
+		r[k] = f.FieldList[v]
+	}
+	return r
+}
+
 // Fields returns all field
 func (f *Form) Fields() []config.FormElement {
 	return f.FieldList
