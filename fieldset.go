@@ -31,22 +31,21 @@ import (
 
 // FieldSetType is a collection of fields grouped within a form.
 type FieldSetType struct {
-	OrigName     string                 `json:"origName" xml:"origName"`
-	CurrName     string                 `json:"currName" xml:"currName"`
-	Label        string                 `json:"label" xml:"label"`
-	LabelCols    int                    `json:"labelCols" xml:"labelCols"`
-	FieldCols    int                    `json:"fieldCols" xml:"fieldCols"`
-	Classes      common.HTMLAttrValues  `json:"classes" xml:"classes"`
-	Tags         common.HTMLAttrValues  `json:"tags" xml:"tags"`
-	Helptext     string                 `json:"helpText" xml:"helpText"`
-	FieldList    []config.FormElement   `json:"fieldList" xml:"fieldList"`
-	AppendData   map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
-	FormTheme    string                 `json:"formTheme" xml:"formTheme"`
-	Language     string                 `json:"language,omitempty" xml:"language,omitempty"`
-	Template     string                 `json:"template" xml:"template"`
-	fieldMap     map[string]int
-	containerMap map[string]string
-	data         map[string]interface{}
+	OrigName   string                 `json:"origName" xml:"origName"`
+	CurrName   string                 `json:"currName" xml:"currName"`
+	Label      string                 `json:"label" xml:"label"`
+	LabelCols  int                    `json:"labelCols" xml:"labelCols"`
+	FieldCols  int                    `json:"fieldCols" xml:"fieldCols"`
+	Classes    common.HTMLAttrValues  `json:"classes" xml:"classes"`
+	Tags       common.HTMLAttrValues  `json:"tags" xml:"tags"`
+	HelpText   string                 `json:"helpText" xml:"helpText"`
+	FieldList  []config.FormElement   `json:"fieldList" xml:"fieldList"`
+	AppendData map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
+	FormTheme  string                 `json:"formTheme" xml:"formTheme"`
+	Language   string                 `json:"language,omitempty" xml:"language,omitempty"`
+	Template   string                 `json:"template" xml:"template"`
+	fieldMap   map[string]int
+	data       map[string]interface{}
 }
 
 func (f *FieldSetType) Cols() int {
@@ -58,8 +57,8 @@ func (f *FieldSetType) SetData(key string, value interface{}) {
 }
 
 // SetHelptext saves the field helptext.
-func (f *FieldSetType) SetHelptext(text string) *FieldSetType {
-	f.Helptext = text
+func (f *FieldSetType) SetHelpText(text string) *FieldSetType {
+	f.HelpText = text
 	return f
 }
 
@@ -93,7 +92,7 @@ func (f *FieldSetType) Data() map[string]interface{} {
 		"groups":    config.SplitGroup(f.FieldList),
 		"classes":   f.Classes,
 		"tags":      f.Tags,
-		"helptext":  f.Helptext,
+		"helptext":  f.HelpText,
 		"lang":      f.Language,
 	}
 	for k, v := range f.AppendData {
@@ -137,29 +136,25 @@ func (f *FieldSetType) Lang() string {
 
 func (f *FieldSetType) Clone() config.FormElement {
 	fc := FieldSetType{
-		OrigName:     f.OrigName,
-		CurrName:     f.CurrName,
-		Label:        f.Label,
-		LabelCols:    f.LabelCols,
-		FieldCols:    f.FieldCols,
-		Classes:      f.Classes.Clone(),
-		Tags:         f.Tags.Clone(),
-		Helptext:     f.Helptext,
-		FieldList:    make([]config.FormElement, len(f.FieldList)),
-		AppendData:   make(map[string]interface{}, len(f.AppendData)),
-		FormTheme:    f.FormTheme,
-		Language:     f.Language,
-		Template:     f.Template,
-		fieldMap:     make(map[string]int, len(f.fieldMap)),
-		containerMap: make(map[string]string, len(f.containerMap)),
-		data:         make(map[string]interface{}, len(f.data)),
+		OrigName:   f.OrigName,
+		CurrName:   f.CurrName,
+		Label:      f.Label,
+		LabelCols:  f.LabelCols,
+		FieldCols:  f.FieldCols,
+		Classes:    f.Classes.Clone(),
+		Tags:       f.Tags.Clone(),
+		HelpText:   f.HelpText,
+		FieldList:  make([]config.FormElement, len(f.FieldList)),
+		AppendData: make(map[string]interface{}, len(f.AppendData)),
+		FormTheme:  f.FormTheme,
+		Language:   f.Language,
+		Template:   f.Template,
+		fieldMap:   make(map[string]int, len(f.fieldMap)),
+		data:       make(map[string]interface{}, len(f.data)),
 	}
 	copy(fc.FieldList, f.FieldList)
 	for k, v := range f.fieldMap {
 		fc.fieldMap[k] = v
-	}
-	for k, v := range f.containerMap {
-		fc.containerMap[k] = v
 	}
 	for k, v := range f.AppendData {
 		fc.AppendData[k] = v
@@ -179,17 +174,16 @@ func (f *FieldSetType) SetTemplate(tmpl string) *FieldSetType {
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func FieldSet(name string, label string, theme string, elems ...config.FormElement) *FieldSetType {
 	ret := &FieldSetType{
-		Template:     "fieldset",
-		CurrName:     name,
-		OrigName:     name,
-		Label:        label,
-		Classes:      common.HTMLAttrValues{},
-		Tags:         common.HTMLAttrValues{},
-		FieldList:    elems,
-		containerMap: make(map[string]string),
-		fieldMap:     map[string]int{},
-		AppendData:   map[string]interface{}{},
-		FormTheme:    theme,
+		Template:   "fieldset",
+		CurrName:   name,
+		OrigName:   name,
+		Label:      label,
+		Classes:    common.HTMLAttrValues{},
+		Tags:       common.HTMLAttrValues{},
+		FieldList:  elems,
+		fieldMap:   map[string]int{},
+		AppendData: map[string]interface{}{},
+		FormTheme:  theme,
 	}
 	for i, elem := range elems {
 		ret.fieldMap[elem.OriginalName()] = i
@@ -234,7 +228,6 @@ func (f *FieldSetType) Elements(elems ...config.FormElement) {
 func (f *FieldSetType) addFieldSet(fs *FieldSetType) *FieldSetType {
 	for _, v := range fs.FieldList {
 		v.SetData("container", "fieldset")
-		f.containerMap[v.OriginalName()] = fs.OriginalName()
 	}
 	f.FieldList = append(f.FieldList, fs)
 	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1
@@ -244,7 +237,6 @@ func (f *FieldSetType) addFieldSet(fs *FieldSetType) *FieldSetType {
 func (f *FieldSetType) addLangSet(fs *LangSetType) *FieldSetType {
 	for _, v := range fs.fieldMap {
 		v.SetData("container", "langset")
-		f.containerMap[v.OriginalName()] = fs.OriginalName()
 	}
 	f.FieldList = append(f.FieldList, fs)
 	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1

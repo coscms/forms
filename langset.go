@@ -35,15 +35,14 @@ type LangSetType struct {
 	Template   string                 `json:"template" xml:"template"`
 	Params     map[string]interface{} `json:"params" xml:"params"`
 	Tags       common.HTMLAttrValues  `json:"tags" xml:"tags"`
-	Helptext   string                 `json:"helpText" xml:"helpText"`
+	HelpText   string                 `json:"helpText" xml:"helpText"`
 	AppendData map[string]interface{} `json:"appendData,omitempty" xml:"appendData,omitempty"`
 	Alone      bool                   `json:"alone,omitempty" xml:"alone,omitempty"`
 	FormTheme  string                 `json:"formTheme" xml:"formTheme"`
 
-	langMap      map[string]int                //{"zh-CN":1}
-	fieldMap     map[string]config.FormElement //{"zh-CN:title":0x344555}
-	containerMap map[string]string             //{"name":"fieldset's name"}
-	data         map[string]interface{}
+	langMap  map[string]int                //{"zh-CN":1}
+	fieldMap map[string]config.FormElement //{"zh-CN:title":0x344555}
+	data     map[string]interface{}
 }
 
 func (f *LangSetType) Cols() int {
@@ -73,15 +72,14 @@ func (f *LangSetType) Clone() config.FormElement {
 		Template:   f.Template,
 		Params:     make(map[string]interface{}, len(f.Params)),
 		Tags:       f.Tags.Clone(),
-		Helptext:   f.Helptext,
+		HelpText:   f.HelpText,
 		AppendData: make(map[string]interface{}, len(f.AppendData)),
 		Alone:      f.Alone,
 		FormTheme:  f.FormTheme,
 
-		langMap:      make(map[string]int, len(f.langMap)),
-		fieldMap:     make(map[string]config.FormElement, len(f.fieldMap)),
-		containerMap: make(map[string]string, len(f.containerMap)),
-		data:         make(map[string]interface{}, len(f.data)),
+		langMap:  make(map[string]int, len(f.langMap)),
+		fieldMap: make(map[string]config.FormElement, len(f.fieldMap)),
+		data:     make(map[string]interface{}, len(f.data)),
 	}
 	for i, l := range f.Languages {
 		fc.Languages[i] = l.Clone()
@@ -94,9 +92,6 @@ func (f *LangSetType) Clone() config.FormElement {
 	}
 	for k, v := range f.fieldMap {
 		fc.fieldMap[k] = v
-	}
-	for k, v := range f.containerMap {
-		fc.containerMap[k] = v
 	}
 	for k, v := range f.AppendData {
 		fc.AppendData[k] = v
@@ -120,8 +115,8 @@ func (f *LangSetType) Language(lang string) *config.Language {
 }
 
 // SetHelptext saves the field helptext.
-func (f *LangSetType) SetHelptext(text string) *LangSetType {
-	f.Helptext = text
+func (f *LangSetType) SetHelpText(text string) *LangSetType {
+	f.HelpText = text
 	return f
 }
 
@@ -141,7 +136,7 @@ func (f *LangSetType) Data() map[string]interface{} {
 		"tags":      f.Tags,
 		"langs":     f.Languages,
 		"name":      f.CurrName,
-		"helptext":  f.Helptext,
+		"helptext":  f.HelpText,
 	}
 	for k, v := range f.AppendData {
 		f.data[k] = v
@@ -183,17 +178,16 @@ func (f *LangSetType) SetTemplate(tmpl string) *LangSetType {
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func LangSet(name string, theme string, languages ...*config.Language) *LangSetType {
 	ret := &LangSetType{
-		Languages:    languages,
-		langMap:      map[string]int{},
-		containerMap: make(map[string]string),
-		fieldMap:     make(map[string]config.FormElement),
-		CurrName:     name,
-		OrigName:     name,
-		Template:     "langset",
-		Params:       map[string]interface{}{},
-		Tags:         common.HTMLAttrValues{},
-		AppendData:   map[string]interface{}{},
-		FormTheme:    theme,
+		Languages:  languages,
+		langMap:    map[string]int{},
+		fieldMap:   make(map[string]config.FormElement),
+		CurrName:   name,
+		OrigName:   name,
+		Template:   "langset",
+		Params:     map[string]interface{}{},
+		Tags:       common.HTMLAttrValues{},
+		AppendData: map[string]interface{}{},
+		FormTheme:  theme,
 	}
 	for i, language := range languages {
 		ret.langMap[language.ID] = i
@@ -288,7 +282,6 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 				v.SetName(f.Languages[ind].Name(v.OriginalName()))
 				key := v.Lang() + `:` + v.OriginalName()
 				f.fieldMap[key] = v
-				f.containerMap[key] = fs.OriginalName()
 			}
 			fs.SetLang(f.Languages[ind].ID)
 			fs.SetName(f.Languages[ind].Name(fs.OriginalName()))
@@ -305,7 +298,6 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 				v.SetData("container", "langset")
 				key := v.Lang() + `:` + v.OriginalName()
 				f.fieldMap[key] = v
-				f.containerMap[key] = fs.OriginalName()
 				v.SetName(language.Name(v.OriginalName()))
 			}
 			fs.SetLang(language.ID)
@@ -327,7 +319,6 @@ func (f *LangSetType) addFieldSet(fs *FieldSetType) *LangSetType {
 			fieldCopy.SetName(language.Name(fieldCopy.OriginalName()))
 			key := fieldCopy.Lang() + `:` + fieldCopy.OriginalName()
 			f.fieldMap[key] = fieldCopy
-			f.containerMap[key] = fs.OriginalName()
 			fsCopy.FieldList[kk] = fieldCopy
 		}
 		fsCopy.SetLang(language.ID)

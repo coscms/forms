@@ -64,7 +64,6 @@ func New() *Form {
 	return &Form{
 		FieldList:             []config.FormElement{},
 		fieldMap:              make(map[string]int),
-		containerMap:          make(map[string]string),
 		Theme:                 common.BASE,
 		Class:                 common.HTMLAttrValues{},
 		ID:                    "",
@@ -102,7 +101,6 @@ type Form struct {
 	omitOrMustFieldsValue map[string]bool //true:omit; false:must
 	omitAllFieldsValue    bool
 	fieldMap              map[string]int
-	containerMap          map[string]string
 	ignoreValid           []string
 	valid                 *validation.Validation
 	labelFn               func(string) string
@@ -128,7 +126,6 @@ func (f *Form) Reset() *Form {
 	f.omitOrMustFieldsValue = map[string]bool{}
 	f.omitAllFieldsValue = false
 	f.fieldMap = map[string]int{}
-	f.containerMap = map[string]string{}
 	f.ignoreValid = []string{}
 	f.valid = nil
 	f.labelFn = nil
@@ -693,7 +690,6 @@ func (f *Form) addField(field fields.FieldInterface) *Form {
 func (f *Form) addFieldSet(fs *FieldSetType) *Form {
 	for _, v := range fs.FieldList {
 		v.SetData("container", "fieldset")
-		f.containerMap[v.OriginalName()] = fs.OriginalName()
 	}
 	f.FieldList = append(f.FieldList, fs)
 	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1
@@ -703,7 +699,6 @@ func (f *Form) addFieldSet(fs *FieldSetType) *Form {
 func (f *Form) addLangSet(fs *LangSetType) *Form {
 	for _, v := range fs.fieldMap {
 		v.SetData("container", "langset")
-		f.containerMap[v.OriginalName()] = fs.OriginalName()
 	}
 	f.FieldList = append(f.FieldList, fs)
 	f.fieldMap[fs.OriginalName()] = len(f.FieldList) - 1
