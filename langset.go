@@ -265,6 +265,7 @@ func (f *LangSetType) addField(field fields.FieldInterface) *LangSetType {
 				v.SetID(v.ID + `_` + language.ID)
 			}
 			v.DeleteParam(`maxlength`)
+			v.DeleteParam(`required`)
 		}
 		fieldCopy.SetLang(language.ID)
 		fieldCopy.SetName(language.Name(fieldCopy.OriginalName()))
