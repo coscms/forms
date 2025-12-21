@@ -1,7 +1,7 @@
 {{- $langset := . }}
 <div{{if $langset.params}}{{range $k,$v := $langset.params}} {{$k}}="{{$v}}"{{end}}{{end}}{{if $langset.tags}} {{$langset.tags}}{{end}}>
 	{{- range .langs }}
-    <div class="langset" id="langset_{{$langset.name|Slugify}}_{{.ID}}">
+    <div class="langset" id="langset_{{$langset.name|Slugify}}_{{.ID}}" data-lang="{{.ID}}">
 		{{- range $langset.Fields }}
 		{{- .Render }}
 		{{- end }}

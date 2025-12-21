@@ -3,7 +3,9 @@
   <!-- Nav tabs -->
   <ul class="nav nav-tabs" role="tablist">
 	{{- range $k, $v := .langs }}
-    <li role="presentation"{{if eq $k 0}} class="active"{{end}}><a href="#langset_{{$langset.name|Slugify}}_{{$v.ID}}" aria-controls="langset_{{$langset.name|Slugify}}_{{$v.ID}}" role="tab" data-toggle="tab">{{$v.Label}}</a></li>
+    <li role="presentation"{{if eq $k 0}} class="active"{{end}}>
+      <a href="#langset_{{$langset.name|Slugify}}_{{$v.ID}}" aria-controls="langset_{{$langset.name|Slugify}}_{{$v.ID}}" role="tab" data-toggle="tab" data-lang="{{$v.ID}}">{{$v.Label}}</a>
+    </li>
 	{{- end }}
   </ul>
   <!-- Tab panes -->
