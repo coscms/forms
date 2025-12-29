@@ -349,7 +349,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 	var sv string
 	value := val
 	if model != nil && !form.IsOmit(ele.Name) {
-		parts := form.parseNameToStructFieldName(ele.Name)
+		parts := form.parseNameToStructFieldName(ele.GetName())
 		isValid := true
 		for _, field := range parts {
 			if value.Kind() == reflect.Pointer {
@@ -398,7 +398,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 		}
 	}
 	isStruct := typ != nil && typ.Kind() == reflect.Struct
-	structFieldName := com.Title(form.cleanName(ele.Name))
+	structFieldName := com.Title(form.cleanName(ele.GetFieldName()))
 	switch ele.Type {
 	case common.DATE:
 		dateFormat := fields.DATE_FORMAT

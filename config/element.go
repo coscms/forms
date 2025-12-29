@@ -26,6 +26,60 @@ type Element struct {
 	Data         map[string]interface{} `json:"data,omitempty"`
 }
 
+func (c *Element) GetFieldName() string {
+	if len(c.Name) == 0 {
+		return ``
+	}
+	fieldName := c.Name
+	var nameInData string
+	if len(c.Data) > 0 {
+		if v, ok := c.Data[`structFieldName`]; ok {
+			nameInData, _ = v.(string)
+		} else if v, ok := c.Data[`originalName`]; ok {
+			nameInData, _ = v.(string)
+		}
+	}
+	if len(nameInData) > 0 {
+		fieldName = nameInData
+	} else {
+		if strings.HasSuffix(fieldName, `]`) { // 处理数组字段名，如 "tags[name]"
+			start := strings.LastIndex(fieldName, `[`)
+			if start > -1 {
+				fieldName = fieldName[start+1 : len(fieldName)-1]
+			}
+		}
+	}
+	return fieldName
+}
+
+func (c *Element) GetName() string {
+	if len(c.Name) == 0 {
+		return ``
+	}
+	name := c.Name
+	var nameInData string
+	if len(c.Data) > 0 {
+		if v, ok := c.Data[`structFieldName`]; ok {
+			nameInData, _ = v.(string)
+		} else if v, ok := c.Data[`originalName`]; ok {
+			nameInData, _ = v.(string)
+		}
+	}
+	if len(nameInData) > 0 {
+		name = nameInData
+	}
+	return name
+}
+
+func (c *Element) GetStructFieldName() string {
+	if len(c.Name) == 0 {
+		return ``
+	}
+	fieldName := c.GetFieldName()
+	fieldName = com.Title(fieldName)
+	return fieldName
+}
+
 func (c *Element) Merge(source *Element) *Element {
 	if len(c.ID) == 0 && len(source.ID) > 0 {
 		c.ID = source.ID
