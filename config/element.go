@@ -26,20 +26,25 @@ type Element struct {
 	Data         map[string]interface{} `json:"data,omitempty"`
 }
 
+func (c *Element) GetNameInData() string {
+	if len(c.Data) == 0 {
+		return ``
+	}
+	var name string
+	if v, ok := c.Data[`structFieldName`]; ok {
+		name, _ = v.(string)
+	} else if v, ok := c.Data[`originalName`]; ok {
+		name, _ = v.(string)
+	}
+	return name
+}
+
 func (c *Element) GetFieldName() string {
 	if len(c.Name) == 0 {
 		return ``
 	}
 	fieldName := c.Name
-	var nameInData string
-	if len(c.Data) > 0 {
-		if v, ok := c.Data[`structFieldName`]; ok {
-			nameInData, _ = v.(string)
-		} else if v, ok := c.Data[`originalName`]; ok {
-			nameInData, _ = v.(string)
-		}
-	}
-	if len(nameInData) > 0 {
+	if nameInData := c.GetNameInData(); len(nameInData) > 0 {
 		fieldName = nameInData
 	} else {
 		if strings.HasSuffix(fieldName, `]`) { // 处理数组字段名，如 "tags[name]"
@@ -47,6 +52,9 @@ func (c *Element) GetFieldName() string {
 			if start > -1 {
 				fieldName = fieldName[start+1 : len(fieldName)-1]
 			}
+		} else {
+			parts := strings.Split(fieldName, `.`)
+			fieldName = parts[len(parts)-1]
 		}
 	}
 	return fieldName
@@ -57,15 +65,7 @@ func (c *Element) GetName() string {
 		return ``
 	}
 	name := c.Name
-	var nameInData string
-	if len(c.Data) > 0 {
-		if v, ok := c.Data[`structFieldName`]; ok {
-			nameInData, _ = v.(string)
-		} else if v, ok := c.Data[`originalName`]; ok {
-			nameInData, _ = v.(string)
-		}
-	}
-	if len(nameInData) > 0 {
+	if nameInData := c.GetNameInData(); len(nameInData) > 0 {
 		name = nameInData
 	}
 	return name
