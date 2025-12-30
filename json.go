@@ -611,6 +611,7 @@ func (form *Form) parseElement(model interface{}, ele *config.Element, typ refle
 	for key, val := range ele.Data {
 		f.SetData(key, val)
 	}
+	f.SetData(`formID`, form.ID)
 	f.SetLabelCols(ele.LabelCols)
 	f.SetFieldCols(ele.FieldCols)
 	return f
