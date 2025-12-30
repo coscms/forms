@@ -1,17 +1,18 @@
 {{- $langset := . }}
 <div{{if $langset.params}}{{range $k,$v := $langset.params}} {{$k}}="{{$v}}"{{end}}{{end}}{{if $langset.tags}} {{$langset.tags}}{{end}}>
-  <!-- Nav tabs -->
+  <!-- Nav tabs -->{{- $uniqid := .formID -}}
+  {{- if not $uniqid }}{{ $uniqid = RandomString 5 }}{{ end -}}
   <ul class="nav nav-tabs" role="tablist">
 	{{- range $k, $v := .langs }}
     <li role="presentation"{{if eq $k 0}} class="active"{{end}}>
-      <a href="#langset_{{$langset.name|Slugify}}_{{$v.ID}}" aria-controls="langset_{{$langset.name|Slugify}}_{{$v.ID}}" role="tab" data-toggle="tab" data-lang="{{$v.ID}}">{{$v.Label}}</a>
+      <a href="#langset_{{$langset.name|Slugify}}_{{$v.ID}}_{{$uniqid}}" aria-controls="langset_{{$langset.name|Slugify}}_{{$v.ID}}_{{$uniqid}}" role="tab" data-toggle="tab" data-lang="{{$v.ID}}">{{$v.Label}}</a>
     </li>
 	{{- end }}
   </ul>
   <!-- Tab panes -->
   <div class="tab-content">
 	{{- range $k, $v := .langs }}
-    <div role="tabpanel" class="tab-pane{{if eq $k 0}} active{{end}}" id="langset_{{$langset.name|Slugify}}_{{$v.ID}}">
+    <div role="tabpanel" class="tab-pane{{if eq $k 0}} active{{end}}" id="langset_{{$langset.name|Slugify}}_{{$v.ID}}_{{$uniqid}}">
 		{{- range $v.Fields }}
     {{- .Render }}
     {{- end }}

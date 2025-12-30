@@ -2,6 +2,7 @@
     "theme":"bootstrap3",
     "method":"POST",
     "action":"/index",
+    "id":"testForm",
     "withButtons":true,
     "elements":[
         {

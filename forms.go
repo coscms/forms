@@ -235,6 +235,7 @@ func (f *Form) Init(c *config.Config, model ...interface{}) *Form {
 	if len(c.Theme) == 0 {
 		c.Theme = common.BASE
 	}
+	f.ID = c.ID
 	f.Theme = c.Theme
 	f.Method = c.Method
 	f.Action = template.HTML(c.Action)

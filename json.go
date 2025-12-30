@@ -238,6 +238,9 @@ func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) 
 		v = v.Elem()
 	}
 	r := form.config
+	if len(r.ID) > 0 {
+		form.SetID(r.ID)
+	}
 	form.ParseModelElements(model, form, r.Elements, r.Languages, t, v, ``)
 	if len(insertErrors) < 1 || insertErrors[0] {
 		form.InsertErrors()
@@ -252,9 +255,6 @@ func (form *Form) ParseModelFromConfig(model interface{}, insertErrors ...bool) 
 			k = attr[0]
 			form.SetParam(k, v)
 		}
-	}
-	if len(r.ID) > 0 {
-		form.SetID(r.ID)
 	}
 	if r.WithButtons {
 		if r.Buttons == nil {
@@ -288,6 +288,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
 			if len(ele.Template) > 0 {
 				f.SetTemplate(ele.Template)
 			}
+			f.SetData(`formID`, form.ID)
 			f.SetData("container", "langset")
 			for key, val := range ele.Data {
 				f.SetData(key, val)
@@ -308,6 +309,7 @@ func (form *Form) ParseModelElements(model interface{}, es ElementSetter,
 				f.SetTemplate(ele.Template)
 			}
 			f.SetData("container", "fieldset")
+			f.SetData(`formID`, form.ID)
 			for key, val := range ele.Data {
 				f.SetData(key, val)
 			}
