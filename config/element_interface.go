@@ -15,6 +15,7 @@ type FormElement interface {
 	SetLang(lang string)
 	Lang() string
 	Clone() FormElement
+	ElementType() string
 }
 
 type HasError interface {

@@ -170,6 +170,10 @@ func (f *FieldSetType) SetTemplate(tmpl string) *FieldSetType {
 	return f
 }
 
+func (f *FieldSetType) ElementType() string {
+	return `fieldset`
+}
+
 // FieldSet creates and returns a new FieldSetType with the given name and list of fields.
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func FieldSet(name string, label string, theme string, elems ...config.FormElement) *FieldSetType {

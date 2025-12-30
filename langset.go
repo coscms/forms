@@ -174,6 +174,10 @@ func (f *LangSetType) SetTemplate(tmpl string) *LangSetType {
 	return f
 }
 
+func (f *LangSetType) ElementType() string {
+	return `langset`
+}
+
 // FieldSet creates and returns a new FieldSetType with the given name and list of fields.
 // Every method for FieldSetType objects returns the object itself, so that call can be chained.
 func LangSet(name string, theme string, languages ...*config.Language) *LangSetType {

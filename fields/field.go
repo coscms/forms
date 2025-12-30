@@ -106,6 +106,10 @@ func (f *Field) SetType(fieldType string) FieldInterface {
 	return f
 }
 
+func (f *Field) ElementType() string {
+	return f.Type
+}
+
 func (f *Field) ReinitTemplate() FieldInterface {
 	f.widget = widgets.BaseWidget(f.Theme, f.Type, f.Template)
 	return f
@@ -191,7 +195,6 @@ func (f *Field) Lang() string {
 // SetTheme sets the theme (e.g.: BASE, BOOTSTRAP) of the field, correctly populating the Widget field.
 func (f *Field) SetTheme(theme string) FieldInterface {
 	f.Theme = theme
-	f.widget = widgets.BaseWidget(theme, f.Type, f.Template)
 	return f
 }
 
@@ -248,17 +251,19 @@ func (f *Field) Data() map[string]interface{} {
 
 // Render packs all data and executes widget render method.
 func (f *Field) Render() template.HTML {
+	return template.HTML(f.Widget().Render(f.Data()))
+}
+
+func (f *Field) Widget() widgets.WidgetInterface {
 	if f.widget != nil {
-		return template.HTML(f.widget.Render(f.Data()))
+		return f.widget
 	}
-	return template.HTML("")
+	f.ReinitTemplate()
+	return f.widget
 }
 
 func (f *Field) String() string {
-	if f.widget != nil {
-		return f.widget.Render(f.Data())
-	}
-	return ""
+	return f.Widget().Render(f.Data())
 }
 
 // AddClass adds a class to the field.

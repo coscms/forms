@@ -49,4 +49,5 @@ type FieldInterface interface {
 	Clone() FormElement
 
 	Element() *Element
+	ElementType() string
 }
