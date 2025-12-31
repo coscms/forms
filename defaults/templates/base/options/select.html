@@ -2,7 +2,10 @@
 {{- if .label }}
 <label{{ if .labelClasses }} class="{{.labelClasses}}"{{end}}{{if .id}} for="{{.id}}"{{end}}>{{.label}}</label>
 {{- end }}
-<select name="{{.name}}"{{ if .classes }} class="{{.classes}}"{{end}}{{if .id}} id="{{.id}}"{{end}}{{if .params}}{{range $k, $v := .params}} {{$k}}="{{$v}}"{{end}}{{end}}{{if .css}} style="{{range $k, $v := .css}}{{$k}}: {{$v}}; {{end}}"{{end}}{{range .tags}} {{.}}{{end}}>
+<select name="{{.name}}"{{ if .classes }} class="{{.classes}}"{{end}}{{if .id}} id="{{.id}}"{{end -}}
+{{- if .params}}{{range $k, $v := .params}} {{$k}}="{{$v}}"{{end}}{{end -}}
+{{- if .css}} style="{{range $k, $v := .css}}{{$k}}: {{$v}}; {{end}}"{{end -}}
+{{- range .tags}} {{.}}{{end}}>
 {{- $p := . }}
 {{- range $k, $v := .choices }}
     {{- if $k }}

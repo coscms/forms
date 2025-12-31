@@ -39,6 +39,7 @@
             "name":"birthday",
             "label":"Birthday",
             "valid":"required",
+            "value":"1984",
             "choices":[
                 {"option":["1983","1983"],"checked":true},
                 {"option":["1984","1984"]},
@@ -92,6 +93,17 @@
                         }
                     ]
                 }
+            ]
+        },
+        {
+            "type":"radio",
+            "name":"show",
+            "label":"Show",
+            "valid":"required",
+            "value":"0",
+            "choices":[
+                {"option":["1","Show"],"checked":true},
+                {"option":["0","Hide"]}
             ]
         }
     ]

@@ -14,6 +14,7 @@ import (
 type Test struct {
 	User     string
 	Birthday string
+	Show     string
 }
 
 var expected = []string{
@@ -43,6 +44,7 @@ func main() {
 	t := Test{
 		User:     `webx`,
 		Birthday: `1985`,
+		Show:     `0`,
 	}
 	b, _ := json.MarshalIndent(config.GetNames(), ``, " ")
 	println(string(b))

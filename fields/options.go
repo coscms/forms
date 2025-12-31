@@ -71,7 +71,7 @@ func RadioFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, name
 	chArr := make([]InputChoice, 0)
 	ret := RadioField(name, chArr)
 	chMap := make(map[string]string)
-	for i := 0; i < len(choices)-1; i += 2 {
+	for i, j := 0, len(choices)-1; i < j; i += 2 {
 		ret.ChoiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
 		chArr = append(chArr, InputChoice{choices[i], fn(choices[i+1]), false})
 		chMap[choices[i]] = choices[i+1]
@@ -108,7 +108,7 @@ func SelectFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, nam
 	chArr := make(map[string][]InputChoice)
 	ret := SelectField(name, chArr)
 	chMap := make(map[string]string)
-	for i := 0; i < len(choices)-2; i += 3 {
+	for i, j := 0, len(choices)-2; i < j; i += 3 {
 		optgroupLabel := fn(choices[i])
 		if _, ok := chArr[optgroupLabel]; !ok {
 			chArr[optgroupLabel] = make([]InputChoice, 0)
@@ -152,7 +152,7 @@ func CheckboxFieldFromInstance(val reflect.Value, t reflect.Type, fieldNo int, n
 	chArr := make([]InputChoice, 0)
 	ret := CheckboxField(name, chArr)
 	chMap := make(map[string]string)
-	for i := 0; i < len(choices)-1; i += 2 {
+	for i, j := 0, len(choices)-1; i < j; i += 2 {
 		ret.ChoiceKeys[choices[i]] = ChoiceIndex{Group: "", Index: len(chArr)}
 		chArr = append(chArr, InputChoice{choices[i], fn(choices[i+1]), false})
 		chMap[choices[i]] = choices[i+1]

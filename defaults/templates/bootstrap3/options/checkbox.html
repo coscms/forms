@@ -7,7 +7,11 @@
 {{- range .choices }}
 <div class="checkbox">
 <label class="control-label{{ if $p.labelClasses }}{{range $p.labelClasses}} {{.}}{{end}}{{end}}">
-	<input type="checkbox" name="{{$p.name}}"{{ if $p.classes }} class="{{range $p.classes}} {{.}}{{end}}"{{end}} value="{{.ID}}"{{if $p.params}}{{range $k2, $v2 := $p.params}} {{$k2}}="{{$v2}}"{{end}}{{end}}{{if $p.css}} style="{{range $k2, $v2 := .css}}{{$k2}}: {{$v2}}; {{end}}"{{end}}{{if .Checked}} checked="checked"{{end}}{{range $k2,$v2 := $p.tags}} {{$k2}}{{end}}>
+	<input type="checkbox" name="{{$p.name}}"{{ if $p.classes }} class="{{range $p.classes}} {{.}}{{end}}"{{end}} value="{{.ID}}"
+	{{- if $p.params}}{{range $k2, $v2 := $p.params}} {{$k2}}="{{$v2}}"{{end}}{{end -}}
+	{{- if $p.css}} style="{{range $k2, $v2 := .css}}{{$k2}}: {{$v2}}; {{end}}"{{end -}}
+	{{- if .Checked}} checked="checked"{{end -}}
+	{{- range $p.tags}} {{.}}{{end}}>
 	{{.Val}}
 </label>
 </div>
