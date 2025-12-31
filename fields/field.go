@@ -22,6 +22,7 @@ package fields
 import (
 	"fmt"
 	"html/template"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -445,14 +446,7 @@ func (f *Field) SetSelected(opt ...string) FieldInterface {
 			if !ok || len(vc) <= i.Index {
 				continue
 			}
-			checked := false
-			for _, v := range opt {
-				if key == v {
-					checked = true
-					break
-				}
-			}
-			choice[i.Group][i.Index].Checked = checked
+			choice[i.Group][i.Index].Checked = slices.Contains(opt, key)
 		}
 	case common.RADIO, common.CHECKBOX:
 		choice := f.Choices.([]InputChoice)
@@ -461,14 +455,7 @@ func (f *Field) SetSelected(opt ...string) FieldInterface {
 			if size <= i.Index {
 				continue
 			}
-			checked := false
-			for _, v := range opt {
-				if key == v {
-					checked = true
-					break
-				}
-			}
-			choice[i.Index].Checked = checked
+			choice[i.Index].Checked = slices.Contains(opt, key)
 		}
 	}
 	return f
@@ -561,7 +548,7 @@ func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterfac
 		} else {
 			c, y := choices.([]InputChoice)
 			if !y {
-				if v, y := choices.([]string); y {
+				if v, y := choices.([]string); y { // [ID, Value, Checked]
 					c = []InputChoice{
 						InputChoice{},
 					}
@@ -591,7 +578,7 @@ func (f *Field) SetChoices(choices interface{}, saveIndex ...bool) FieldInterfac
 	case common.RADIO, common.CHECKBOX:
 		c, y := choices.([]InputChoice)
 		if !y {
-			if v, y := choices.([]string); y {
+			if v, y := choices.([]string); y { // [ID, Value, Checked]
 				c = []InputChoice{
 					InputChoice{},
 				}
