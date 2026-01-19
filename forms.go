@@ -60,6 +60,14 @@ func NewWithConfigFile(m interface{}, configJSONFile string) *Form {
 	return NewWithModelConfig(m, config)
 }
 
+func DefaultLabelFn(s string) string {
+	return s
+}
+
+func DefaultNameFn(s string) string {
+	return s
+}
+
 func New() *Form {
 	return &Form{
 		FieldList:             []config.FormElement{},
@@ -71,7 +79,8 @@ func New() *Form {
 		CSS:                   map[string]string{},
 		Method:                POST,
 		AppendData:            map[string]interface{}{},
-		labelFn:               func(s string) string { return s },
+		labelFn:               DefaultLabelFn,
+		nameFn:                DefaultNameFn,
 		validTagFn:            Html5Validate,
 		beforeRender:          []func(){},
 		omitOrMustFieldsValue: map[string]bool{},
@@ -104,6 +113,7 @@ type Form struct {
 	ignoreValid           []string
 	valid                 *validation.Validation
 	labelFn               func(string) string
+	nameFn                func(string) string
 	validTagFn            func(string, fields.FieldInterface)
 	config                *config.Config
 	beforeRender          []func()
@@ -128,8 +138,9 @@ func (f *Form) Reset() *Form {
 	f.fieldMap = map[string]int{}
 	f.ignoreValid = []string{}
 	f.valid = nil
-	f.labelFn = nil
-	f.validTagFn = nil
+	f.labelFn = DefaultLabelFn
+	f.nameFn = DefaultNameFn
+	f.validTagFn = Html5Validate
 	f.config = nil
 	f.beforeRender = []func(){}
 	f.debug = false
@@ -214,6 +225,11 @@ func (f *Form) SetLabelFunc(fn func(string) string) *Form {
 	return f
 }
 
+func (f *Form) SetNameFunc(fn func(string) string) *Form {
+	f.nameFn = fn
+	return f
+}
+
 func (f *Form) SetValidTagFunc(fn func(string, fields.FieldInterface)) *Form {
 	f.validTagFn = fn
 	return f
@@ -221,6 +237,10 @@ func (f *Form) SetValidTagFunc(fn func(string, fields.FieldInterface)) *Form {
 
 func (f *Form) LabelFunc() func(string) string {
 	return f.labelFn
+}
+
+func (f *Form) NameFunc() func(string) string {
+	return f.nameFn
 }
 
 func (f *Form) ValidTagFunc() func(string, fields.FieldInterface) {
@@ -456,10 +476,13 @@ func (form *Form) unWindStructure(m interface{}, baseName string) ([]interface{}
 		if len(baseName) == 0 {
 			fName = t.Field(i).Name
 		} else {
-			fName = strings.Join([]string{baseName, t.Field(i).Name}, ".")
+			fName = baseName + "." + t.Field(i).Name
 		}
 		useFieldValue := !form.IsOmit(fName)
 		//fmt.Println(fName, t.Field(i).Type.String(), t.Field(i).Type.Kind())
+		if form.nameFn != nil {
+			fName = form.nameFn(fName)
+		}
 		switch widget {
 		case "color", "email", "file", "image", "month", "search", "tel", "url", "week":
 			f = fields.TextFieldFromInstance(v, t, i, fName, useFieldValue, widget)
